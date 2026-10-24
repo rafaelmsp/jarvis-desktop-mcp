@@ -1,0 +1,62 @@
+import readline from 'node:readline';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import {MODES, EXPRESSIONS, STATUSES} from './state.mjs';
+
+const TOKEN_FILE = path.join(os.homedir(), '.jarvis-desktop-mcp-token');
+const URL = `http://127.0.0.1:${Number(process.env.JARVIS_PORT || 3765)}`;
+const tool = (name, description, properties, required=['value']) => ({
+  name, description, inputSchema:{type:'object',properties,required,additionalProperties:false}
+});
+const option = values => ({type:'string', enum:values});
+const tools = [
+  tool('jarvis_set_mode', 'Altera visual: core (símbolo circular) ou face (rosto holográfico).', {value:option(MODES)}),
+  tool('jarvis_set_expression', 'Altera expressão visual do avatar.', {value:option(EXPRESSIONS)}),
+  tool('jarvis_set_status', 'Altera status do avatar: ouvindo, processando, falando, etc.', {value:option(STATUSES)}),
+  tool('jarvis_set_speaking', 'Inicia/encerra a animação de fala. Não representa necessariamente o áudio real do ChatGPT.', {value:{type:'boolean'}}),
+  tool('jarvis_set_caption', 'Define mensagem breve no painel; não envie dados confidenciais.', {value:{type:'string',maxLength:120}}),
+  tool('jarvis_get_state', 'Obtém estado visual atual do Jarvis.', {}, []),
+  tool('jarvis_reset', 'Restaura o avatar para estado inicial.', {}, [])
+];
+const actions = {jarvis_set_mode:'set_mode',jarvis_set_expression:'set_expression',jarvis_set_status:'set_status',jarvis_set_speaking:'set_speaking',jarvis_set_caption:'set_caption',jarvis_reset:'reset'};
+
+async function runTool(name,args={}) {
+  const definition = tools.find(t=>t.name===name);
+  if (!definition) throw Error('Ferramenta desconhecida');
+  if (name === 'jarvis_get_state') {
+    const response = await fetch(`${URL}/api/state`);
+    if (!response.ok) throw Error('Painel não está disponível');
+    return await response.json();
+  }
+  const token = fs.readFileSync(TOKEN_FILE,'utf8').trim();
+  const response = await fetch(`${URL}/api/control`, {
+    method:'POST', headers:{'Content-Type':'application/json','X-Jarvis-Token':token},
+    body:JSON.stringify({action:actions[name], value:args.value})
+  });
+  const result = await response.json();
+  if (!response.ok) throw Error(result.error || 'Comando falhou');
+  return result.state;
+}
+function send(obj) { process.stdout.write(JSON.stringify(obj)+'\n'); }
+async function handle(msg) {
+  if (!msg || msg.jsonrpc !== '2.0' || typeof msg.method !== 'string') return;
+  if (msg.id === undefined) return;
+  try {
+    let result;
+    switch(msg.method) {
+      case 'initialize': result = {protocolVersion:'2025-06-18',capabilities:{tools:{listChanged:false}},serverInfo:{name:'jarvis-avatar',version:'0.1.0'}}; break;
+      case 'ping': result = {}; break;
+      case 'tools/list': result = {tools}; break;
+      case 'tools/call': {
+        try {result={content:[{type:'text',text:JSON.stringify(await runTool(msg.params?.name,msg.params?.arguments))}],isError:false};}
+        catch(e){result={content:[{type:'text',text:String(e.message)}],isError:true};}
+        break;
+      }
+      default: return send({jsonrpc:'2.0',id:msg.id,error:{code:-32601,message:'Method not found'}});
+    }
+    send({jsonrpc:'2.0',id:msg.id,result});
+  } catch(e) {send({jsonrpc:'2.0',id:msg.id,error:{code:-32603,message:String(e.message)}});}
+}
+const rl=readline.createInterface({input:process.stdin,crlfDelay:Infinity});
+rl.on('line',line=>{try {const msg=JSON.parse(line);void handle(msg);} catch {process.stderr.write('Mensagem JSON inválida\n');}});
