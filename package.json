@@ -1,0 +1,14 @@
+{
+  "name": "jarvis-desktop-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Avatar Jarvis com duas interfaces e controle MCP local, sem API de IA",
+  "scripts": {
+    "start": "node src/server.mjs",
+    "mcp": "node src/mcp-server.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "engines": {"node": ">=20"},
+  "license": "MIT"
+}
