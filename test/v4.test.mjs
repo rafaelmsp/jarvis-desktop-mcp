@@ -82,6 +82,8 @@ test('a interface anima a boca no modo falando e mostra a porta correta',async()
   assert.ok(html.includes('id="portLabel"'), 'rodapé exibe porta dinâmica');
   assert.ok(html.includes('Copyright © 2026 Rafael Passos'), 'rodapé informa os direitos autorais');
   assert.ok(html.includes('id="puppetTest"'), 'teste silencioso disponível na interface');
+  assert.ok(html.includes('id="voiceSessionButton"'), 'sessao conversacional disponível');
+  assert.ok(app.includes('current.voiceSession || !synth'), 'modo visual impede áudio local');
 });
 
 test('acabamento humanoide cria detalhes dos olhos e orelhas e libera recursos',async()=>{
@@ -129,6 +131,61 @@ test('comando visual mudo inicia a fala e a encerra automaticamente', async()=>{
     assert.equal(finished.speaking,false);
     assert.equal(finished.expression,'neutral');
     assert.equal(finished.status,'idle');
+  } finally {
+    cp.kill();
+    await new Promise(r=>setTimeout(r,100));
+    await fs.rm(tokenPath,{force:true}).catch(()=>{});
+  }
+});
+
+test('sessão de voz silenciosa gera pensando, falando e ouvindo, com parada', async()=>{
+  const port=49000+Math.floor(Math.random()*300);
+  const endpoint='http://127.0.0.1:'+port;
+  const tokenPath=path.join(os.homedir(),'.jarvis-desktop-mcp-token-'+port);
+  const cp=spawn(process.execPath,['src/server.mjs'],{
+    cwd:root,env:{...process.env,JARVIS_PORT:String(port)},stdio:['ignore','pipe','pipe']
+  });
+  try{
+    let ready=false;
+    for(let i=0;i<100;i++){
+      await new Promise(r=>setTimeout(r,30));
+      try{if((await fetch(endpoint+'/api/state')).ok){ready=true;break;}}catch{}
+    }
+    assert.ok(ready);
+    const token=(await fs.readFile(tokenPath,'utf8')).trim();
+    const cmd=async(action,value)=>{
+      const res=await fetch(endpoint+'/api/control',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Jarvis-Token':token},
+        body:JSON.stringify({action,value})
+      });
+      assert.equal(res.status,200);
+      return (await res.json()).state;
+    };
+    let state=await cmd('set_voice_session',true);
+    assert.equal(state.expression,'listening');
+    assert.equal(state.voiceSession,true);
+    state=await cmd('voice_turn',1);
+    assert.equal(state.status,'processing');
+    assert.equal(state.speaking,false);
+    await new Promise(r=>setTimeout(r,600));
+    state=await fetch(endpoint+'/api/state').then(r=>r.json());
+    assert.equal(state.status,'speaking');
+    assert.equal(state.expression,'speaking');
+    await new Promise(r=>setTimeout(r,1050));
+    state=await fetch(endpoint+'/api/state').then(r=>r.json());
+    assert.equal(state.status,'listening');
+    assert.equal(state.expression,'listening');
+    assert.equal(state.speaking,false);
+    // Cancel a long running reply immediately and verify no stale timer restarts it.
+    await cmd('voice_turn',15);
+    state=await cmd('set_voice_session',false);
+    assert.equal(state.status,'idle');
+    assert.equal(state.voiceSession,false);
+    await new Promise(r=>setTimeout(r,550));
+    state=await fetch(endpoint+'/api/state').then(r=>r.json());
+    assert.equal(state.status,'idle');
+    assert.equal(state.speaking,false);
   } finally {
     cp.kill();
     await new Promise(r=>setTimeout(r,100));

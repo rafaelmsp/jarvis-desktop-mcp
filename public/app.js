@@ -7,7 +7,7 @@ const bars = Array.from({length:25},()=>{
   $('wave').append(bar);
   return bar;
 });
-let current = {mode:'face',expression:'neutral',status:'idle',speaking:false,audioLevel:0,caption:'JARVIS ONLINE'};
+let current = {mode:'face',expression:'neutral',status:'idle',speaking:false,voiceSession:false,audioLevel:0,caption:'JARVIS ONLINE'};
 let micEnabled = false;
 let stream = null;
 let audioContext = null;
@@ -20,7 +20,7 @@ let localSpeaking = false;
 const synth = window.speechSynthesis;
 function updateVoiceInfo(message) { $('voiceInfo').textContent = message; }
 function speakLocal(text) {
-  if (!voiceEnabled || !synth || !text.trim()) return;
+  if (!voiceEnabled || current.voiceSession || !synth || !text.trim()) return;
   synth.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = 'pt-BR';
@@ -50,6 +50,24 @@ function apply(state) {
   const changedCaption = lastCaption !== null && state.caption !== lastCaption;
   lastCaption = state.caption;
   current=state;
+  if (state.voiceSession) {
+    // No modo visual, desabilitar som e captura locais.
+    if (voiceEnabled) {
+      voiceEnabled=false; synth?.cancel(); localSpeaking=false;
+      $('voiceButton').classList.remove('active');
+      $('voiceButton').setAttribute('aria-pressed','false');
+      $('voiceButton').textContent='🔇 Ativar voz local';
+      updateVoiceInfo('Modo visual sem áudio');
+    }
+    if (micEnabled) void toggleMic();
+  }
+  $('voiceSessionButton').classList.toggle('active',Boolean(state.voiceSession));
+  $('voiceSessionButton').setAttribute('aria-pressed',String(Boolean(state.voiceSession)));
+  $('voiceSessionButton').textContent=state.voiceSession?'◼ Encerrar sessão visual':'◉ Iniciar sessão visual';
+  $('voiceSessionStatus').textContent=state.voiceSession?'SESSÃO VISUAL ATIVA · SEM ÁUDIO':'MCP pronto · sem sessão ativa';
+  $('micButton').disabled=Boolean(state.voiceSession);
+  $('voiceButton').disabled=Boolean(state.voiceSession);
+  $('testVoice').disabled=Boolean(state.voiceSession);
   avatar.classList.toggle('face',state.mode==='face');
   avatar.classList.toggle('core',state.mode==='core');
   avatar.dataset.expression=state.expression;
@@ -80,6 +98,10 @@ events.onmessage=ev=>{try{apply(JSON.parse(ev.data));}catch(e){console.warn(e);}
 events.onerror=()=>connection(false);
 async function toggleMic() {
   const button=$('micButton');
+  if(current.voiceSession && !micEnabled){
+    updateVoiceInfo('Microfone desativado no modo visual');
+    return;
+  }
   if(micEnabled) {
     micEnabled=false;stream?.getTracks().forEach(t=>t.stop());stream=null;
     await audioContext?.close();audioContext=null;analyser=null;micLevel=0;
@@ -93,12 +115,14 @@ async function toggleMic() {
     micEnabled=true;button.textContent='◉ Microfone ativo';button.classList.add('active');
   } catch(e) {button.textContent='Microfone indisponível';console.warn('Permissão:',e);}
 }
+$('voiceSessionButton').addEventListener('click',()=>control('set_voice_session',!current.voiceSession));
 $('micButton').addEventListener('click',toggleMic);
 $('puppetTest').addEventListener('click', () => {
   // Simulação visual local, sem SpeechSynthesis nem microfone.
   control('animate_reply', 12);
 });
 $('voiceButton').addEventListener('click', () => {
+  if (current.voiceSession) { updateVoiceInfo('Voz local desativada no modo visual'); return; }
   if (!synth) { updateVoiceInfo('Síntese de voz indisponível neste navegador'); return; }
   voiceEnabled = !voiceEnabled;
   $('voiceButton').classList.toggle('active',voiceEnabled);

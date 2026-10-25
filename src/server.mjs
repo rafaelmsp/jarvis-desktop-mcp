@@ -14,6 +14,7 @@ const TOKEN_FILE = path.join(os.homedir(), `.jarvis-desktop-mcp-token${PORT === 
 let state = initialState();
 const clients = new Set();
 let replyAnimationTimer = null;
+let thinkingTimer = null;
 
 const token = randomBytes(32).toString('hex');
 fs.writeFileSync(TOKEN_FILE, token, {mode: 0o600});
@@ -66,11 +67,29 @@ const server = http.createServer(async (req, res) => {
       const command = await consume(req);
       const nextState = applyCommand(state, command);
       // Novos comandos explícitos de fala/estado substituem uma animação temporizada anterior.
-      if (command.action === 'animate_reply' || ['set_speaking','set_status','reset'].includes(command.action)) {
+      if (['animate_reply','voice_turn','set_voice_session','set_speaking','set_status','reset'].includes(command.action)) {
         clearTimeout(replyAnimationTimer);
+        clearTimeout(thinkingTimer);
         replyAnimationTimer = null;
+        thinkingTimer = null;
       }
       state = nextState;
+      if (command.action === 'voice_turn') {
+        // Uma unica chamada MCP inicia pensando -> falando -> ouvindo.
+        // As duracoes sao estimativas, nao eventos reais do audio.
+        thinkingTimer = setTimeout(() => {
+          thinkingTimer = null;
+          state = applyCommand(state, {action:'set_speaking',value:true});
+          publish();
+          replyAnimationTimer = setTimeout(() => {
+            replyAnimationTimer = null;
+            state = applyCommand(state, {action:'set_speaking',value:false});
+            publish();
+          }, command.value * 1000);
+          replyAnimationTimer.unref();
+        }, 450);
+        thinkingTimer.unref();
+      }
       if (command.action === 'animate_reply') {
         replyAnimationTimer = setTimeout(() => {
           replyAnimationTimer = null;
@@ -93,5 +112,5 @@ const server = http.createServer(async (req, res) => {
 const heartbeat = setInterval(() => {
   for (const client of clients) {try { client.write(': ping\n\n');} catch {clients.delete(client);}}
 }, 20_000);
-server.on('close', () => {clearInterval(heartbeat); clearTimeout(replyAnimationTimer);});
+server.on('close', () => {clearInterval(heartbeat); clearTimeout(replyAnimationTimer); clearTimeout(thinkingTimer);});
 server.listen(PORT, HOST, () => console.log(`JARVIS online em http://${HOST}:${PORT}\nToken local: ${TOKEN_FILE}`));

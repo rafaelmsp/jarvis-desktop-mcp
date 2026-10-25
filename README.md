@@ -14,6 +14,17 @@ A **branch `feature/jarvis-v4-humanoid`** contém a V4.1 experimental, com geome
 
 **Importante:** o modelo V4.1 é um protótipo. Para compilar a partir das fontes, execute `npm ci` e `npm run build-v4`. O bundle WebGL já está incluído, portanto a execução local com `npm start` não exige download de bibliotecas. Esta versão **não foi mesclada na `main`** até sua aprovação final.
 
+## Protocolo JARVIS — sessão visual em conversas por voz
+
+A V4.2 experimental acrescenta **avatar ventríloquo silencioso**: sessão ouvindo, comando MCP de resposta pensando/falando e retorno automático a ouvindo. Não recebe, captura nem produz áudio. O som permanece no ChatGPT.
+
+- Novas ferramentas MCP: `jarvis_voice_session` (ativar/desativar) e `jarvis_voice_turn` (estimativa de 1–60 segundos).
+- Controles no painel para iniciar/encerrar sessão; microfone e voz local ficam desabilitados durante a sessão.
+- Script local `scripts/jarvis-voice.ps1` para integração com o Desktop Commander já conectado ao ChatGPT, sem túnel adicional.
+- **Não há garantia de chamadas automáticas em todos os turnos do modo Voz Live.** O controle é por ferramenta e os movimentos são uma aproximação visual, não lip-sync real.
+
+[Leia a documentação do Protocolo JARVIS](docs/protocolo-jarvis-voz.md).
+
 ## Executar no Windows 10
 
 Requer Node.js 20+ e Edge/Chrome. Não necessita `npm install`.
