@@ -11,20 +11,20 @@ Requer Node.js 20+ e Edge/Chrome. Não necessita `npm install`.
 1. Clone ou baixe este repositório em uma pasta própria, por exemplo `C:\Jarvis`.
 2. Execute `iniciar-jarvis.bat` ou, no terminal, `npm start`.
 3. Abra `http://127.0.0.1:3765`.
-4. Alterne entre **Núcleo** e **Holograma**, teste expressões e ative o microfone opcional.
+4. Alterne entre **Núcleo** e **Holograma**, teste expressões, clique em **Ativar voz local** e depois em **Testar resposta**. O microfone é opcional e independente.
 5. Consulte `docs/integracao-mcp.md` para conectar um cliente MCP ao comando `node src/mcp-server.mjs`.
 
 ## Funcionalidades
 
 - Rosto holográfico e núcleo circular com animações locais.
 - Expressões e estado visual controlados pelo painel ou por sete ferramentas MCP.
-- Efeito de áudio com permissão do microfone (apenas volume local, sem gravação).
+- Síntese de voz local em português no Chrome/Edge, ativada manualmente; a nova legenda recebida via MCP pode ser lida em voz alta.\n- Efeito de áudio com permissão do microfone (apenas volume local, sem gravação).
 - Servidor HTTP em `127.0.0.1` com atualizações SSE.
 - MCP por stdio; sem necessidade de API da OpenAI.
 
 ## Limitações
 
-Este é um **protótipo de interface**, não um aplicativo `.exe` nem um assistente independente. Não intercepta a conversa do ChatGPT, não reproduz sua voz automaticamente e não controla o Windows. A configuração do MCP no cliente ainda é necessária.
+Este é um **protótipo de interface**, não um aplicativo `.exe` nem um assistente independente. Não intercepta a conversa do ChatGPT, não reproduz sua voz automaticamente e não controla o Windows. A configuração do MCP no cliente ainda é necessária. Consulte `docs/integracao-mcp.md` para conectar via STDIO no ChatGPT Desktop compatível ou via túnel no ChatGPT web.\n\n**Observação:** a voz do avatar é gerada pelo navegador e não é o áudio da voz do ChatGPT.
 
 ## Segurança
 
