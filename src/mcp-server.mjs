@@ -4,8 +4,9 @@ import os from 'node:os';
 import path from 'node:path';
 import {MODES, EXPRESSIONS, STATUSES} from './state.mjs';
 
-const TOKEN_FILE = path.join(os.homedir(), '.jarvis-desktop-mcp-token');
-const URL = `http://127.0.0.1:${Number(process.env.JARVIS_PORT || 3765)}`;
+const PORT = Number(process.env.JARVIS_PORT || 3765);
+const TOKEN_FILE = path.join(os.homedir(), `.jarvis-desktop-mcp-token${PORT === 3765 ? '' : '-' + PORT}`);
+const URL = `http://127.0.0.1:${PORT}`;
 const tool = (name, description, properties, required=['value']) => ({
   name, description, inputSchema:{type:'object',properties,required,additionalProperties:false}
 });

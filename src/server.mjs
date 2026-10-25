@@ -10,7 +10,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PUBLIC = path.join(ROOT, 'public');
 const HOST = '127.0.0.1';
 const PORT = Number(process.env.JARVIS_PORT || 3765);
-const TOKEN_FILE = path.join(os.homedir(), '.jarvis-desktop-mcp-token');
+const TOKEN_FILE = path.join(os.homedir(), `.jarvis-desktop-mcp-token${PORT === 3765 ? '' : '-' + PORT}`);
 let state = initialState();
 const clients = new Set();
 
@@ -40,8 +40,8 @@ const consume = req => new Promise((resolve, reject) => {
   req.on('end', () => {try {resolve(JSON.parse(chunks));} catch {reject(Error('JSON inválido'));}});
   req.on('error', reject);
 });
-const files = {'/':'index.html','/index.html':'index.html','/app.js':'app.js','/style.css':'style.css','/assets/jarvis_humanoide_grid_conceito.webp':'../assets/jarvis_humanoide_grid_conceito.webp'};
-const types = {'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.webp':'image/webp'};
+const files = {'/':'index.html','/index.html':'index.html','/app.js':'app.js','/style.css':'style.css','/face-v4.bundle.js':'face-v4.bundle.js','/assets/models/canonical-face.json':'assets/models/canonical-face.json','/assets/jarvis_humanoide_grid_conceito.webp':'../assets/jarvis_humanoide_grid_conceito.webp'};
+const types = {'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.webp':'image/webp','.json':'application/json; charset=utf-8'};
 
 const server = http.createServer(async (req, res) => {
   const p = new URL(req.url, 'http://localhost').pathname;

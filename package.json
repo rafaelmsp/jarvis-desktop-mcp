@@ -7,8 +7,15 @@
   "scripts": {
     "start": "node src/server.mjs",
     "mcp": "node src/mcp-server.mjs",
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test test/*.test.mjs",
+    "build-v4": "node scripts/build-v4.mjs"
   },
-  "engines": {"node": ">=20"},
-  "license": "MIT"
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "0.25.12",
+    "three": "0.180.0"
+  }
 }
