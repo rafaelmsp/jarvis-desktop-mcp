@@ -1,10 +1,11 @@
 /**
- * JARVIS V4.4 facial rig.
- * Non-destructive deformation of the original 468 MediaPipe landmarks.
- * No extra dependencies and no dependency on audio capture.
+ * JARVIS V4.5 — non-destructive facial anatomy and expression rig.
+ * Canonical topology (468 landmarks) remains unchanged.
+ * Local weighted regions are calculated ONCE, not every animation frame.
+ * Lip movement is driven by amplitude, not phoneme identification.
  */
 export const clamp01 = n => Math.min(1, Math.max(0, Number.isFinite(n) ? n : 0));
-const gauss = (x,y,cx,cy,sx,sy) =>
+const gauss=(x,y,cx,cy,sx,sy)=>
   Math.exp(-1.65*(((x-cx)/sx)**2+((y-cy)/sy)**2));
 const mix=(a,b,t)=>a+(b-a)*t;
 const ease=(start,end,value)=>{
@@ -13,63 +14,92 @@ const ease=(start,end,value)=>{
 };
 
 export function createFacialRig(vertices) {
-  if (!(vertices instanceof Float32Array) || vertices.length !== 468*3) {
+  if (!(vertices instanceof Float32Array) || vertices.length !== 468*3)
     throw Error('Malha facial inválida: 468 vértices obrigatórios');
-  }
-  const state={mouth:0, smile:0, attention:0, thinking:0, alert:0, surprise:0, blink:0, gaze:0};
+
+  // All masks use canonical mesh coordinates. Never change the source array.
+  const regions=Array.from({length:468},(_,i)=>{
+    const k=i*3,x=vertices[k],y=vertices[k+1],z=vertices[k+2];
+    const front=ease(.7,3.5,z), absX=Math.abs(x);
+    const lip=gauss(x,y,0,-4.33,2.85,.94)*front;
+    const corner=gauss(absX,y,2.28,-4.28,.95,.85)*front;
+    const cheek=gauss(absX,y,3.55,-2.5,2.15,2.5)*front;
+    const jaw=gauss(x,y,0,-6.05,4.35,3.3)*front;
+    const eye=gauss(absX,y,3.16,2.64,1.58,.9)*front;
+    const brow=gauss(absX,y,3.18,3.55,2.05,.78)*front;
+    const midline=gauss(x,y,0,2.8,1.8,1.6)*front;
+    const noseBridge=gauss(x,y,0,.7,1.22,3.0)*front;
+    const noseTip=gauss(x,y,0,-1.24,1.25,1.12)*front;
+    const noseWing=gauss(absX,y,1.3,-1.67,.80,.78)*front;
+    const cheekbone=gauss(absX,y,4.05,-1.48,2.08,1.65)*front;
+    const cheekHollow=gauss(absX,y,3.9,-3.85,1.75,1.5)*front;
+    const chin=gauss(x,y,0,-7.5,2.35,1.9)*front;
+    const jawWing=gauss(absX,y,4.8,-5.5,2.0,2.5)*front;
+    return {
+      front,lip,corner,cheek,jaw,eye,brow,midline,jawWing,
+      upper:y>=-4.32,center:1-ease(1.45,3.1,absX),sign:Math.sign(x),
+      baseDepth:.065*noseBridge+.105*noseTip+.07*noseWing+
+        .115*cheekbone-.052*cheekHollow+.055*chin
+    };
+  });
+  const state={
+    mouth:0,smile:0,attention:0,thinking:0,alert:0,surprise:0,
+    blink:0,gaze:0,gazeVertical:0,squint:0
+  };
   const pose={...state};
 
   function updateInto(out,{time=0,delta=1/30,expression='neutral',speaking=false,
     audioDriven=false,audioLevel=0,reducedMotion=false}={}) {
     if (!(out instanceof Float32Array) || out.length!==vertices.length)
       throw Error('Buffer de deformação inválido');
-    const d=Math.max(1/240, Math.min(0.2, delta));
-    const intensity=clamp01(audioLevel);
-    const vocal=audioDriven ? (speaking ? 0.1+0.85*Math.pow(intensity,0.72):0) :
-      speaking ? 0.25+0.54*(0.5+0.5*Math.sin(time*13.8)) : 0;
+
+    const d=Math.max(1/240,Math.min(.2,Number.isFinite(delta)?delta:1/30));
+    const intensity=clamp01(Number(audioLevel));
+    const vocal=audioDriven
+      ? (speaking ? .1+.85*Math.pow(intensity,.72) : 0)
+      : (speaking ? .25+.54*(.5+.5*Math.sin(time*13.8)) : 0);
     const targets={
-      mouth: Math.max(vocal,expression==='surprised' ? 0.66 : 0),
-      smile: expression==='happy' ? 1 : 0,
-      attention: expression==='listening' ? 1 : 0,
-      thinking: expression==='thinking' ? 1 : 0,
-      alert: expression==='alert' ? 1 : 0,
-      surprise: expression==='surprised' ? 1 : 0,
-      blink: reducedMotion ? 0 : blinkAt(time),
-      gaze: reducedMotion ? 0 : Math.sin(time*0.49)*0.055
+      mouth:Math.max(vocal,expression==='surprised'?.66:0),
+      smile:expression==='happy'?1:0,
+      attention:expression==='listening'?1:0,
+      thinking:expression==='thinking'?1:0,
+      alert:expression==='alert'?1:0,
+      surprise:expression==='surprised'?1:0,
+      blink:reducedMotion?0:blinkAt(time),
+      gaze:reducedMotion?0:Math.sin(time*.49)*.055,
+      gazeVertical:reducedMotion?0:Math.sin(time*.31)*.026,
+      squint:expression==='happy'?.23:expression==='listening'?.13:
+        expression==='thinking'?.10:0
     };
     for(const key of Object.keys(state)){
-      const attack = key==='mouth' ? 0.055 : key==='blink' ? 0.028 : 0.17;
-      const release= key==='mouth' ? 0.095 : key==='blink' ? 0.042 : 0.23;
-      const tau=targets[key]>state[key] ? attack : release;
+      const attack=key==='mouth'?.055:key==='blink'?.028:
+        key==='gaze'||key==='gazeVertical'?.28:.17;
+      const release=key==='mouth'?.095:key==='blink'?.042:
+        key==='gaze'||key==='gazeVertical'?.28:.23;
+      const tau=targets[key]>state[key]?attack:release;
       state[key]=mix(state[key],targets[key],1-Math.exp(-d/tau));
     }
-    const mouth=state.mouth;
-    const attention=state.attention,thought=state.thinking;
-    const blink=state.blink,smile=state.smile;
+
+    const mouth=state.mouth,attention=state.attention,thought=state.thinking;
+    const blink=state.blink,smile=state.smile,surprise=state.surprise;
     for(let i=0;i<468;i++){
-      const k=i*3,x=vertices[k],y=vertices[k+1],z=vertices[k+2];
-      const front=ease(0.7,3.5,z);
-      const lip=gauss(x,y,0,-4.33,2.85,0.94)*front;
-      const corner=gauss(Math.abs(x),y,2.28,-4.28,0.95,0.85)*front;
-      const cheek=gauss(Math.abs(x),y,3.55,-2.5,2.15,2.5)*front;
-      const jaw=gauss(x,y,0,-6.05,4.35,3.3)*front;
-      const upper=y>=-4.32;
-      const eye=gauss(Math.abs(x),y,3.16,2.64,1.58,0.9)*front;
-      const brow=gauss(Math.abs(x),y,3.18,3.55,2.05,.78)*front;
-      const midline=gauss(x,y,0,2.8,1.8,1.6)*front;
-      // Lips part gently, jaw follows. Mouth corners retain natural attachment.
-      const centerFactor=1-ease(1.45,3.1,Math.abs(x));
-      const lipMotion=mouth*lip*(0.72+0.28*centerFactor);
-      const lipDy=upper ? lipMotion*0.34 : -lipMotion*0.49;
-      const jawDrop=-mouth*jaw*0.19;
-      const smileLift=smile*(corner*.34 + cheek*.07);
-      const eyelid=eye*blink*(y>2.64 ? -0.35 : 0.12);
-      const focusEye=eye*(attention*0.048-thought*0.055);
-      const browMove=brow*(attention*0.13+thought*.09+state.surprise*.32-state.alert*.17);
-      out[k]=x + Math.sign(x)*corner*(smile*.12 - mouth*.04);
-      out[k+1]=y+lipDy+jawDrop+smileLift+eyelid+focusEye+browMove;
-      out[k+2]=z + lipMotion*(upper?0.045:0.085) + cheek*smile*.045+
-        midline*(thought*.025);
+      const k=i*3,x=vertices[k],y=vertices[k+1],z=vertices[k+2],w=regions[i];
+      // Center opens more than the corners; the mandible moves independently.
+      const lipMotion=mouth*w.lip*(.72+.28*w.center);
+      const lipDy=w.upper?lipMotion*.34:-lipMotion*.49;
+      const jawDrop=-mouth*w.jaw*.19;
+      const smileLift=smile*(w.corner*.34+w.cheek*.07);
+      const eyelid=w.eye*(blink*(y>2.64?-.35:.12)-
+        state.squint*(y>2.64?.06:-.028));
+      const focusEye=w.eye*(attention*.048-thought*.055);
+      const browMove=w.brow*(attention*.13+thought*.09+
+        surprise*.32-state.alert*.17);
+      // Shape shifts remain subtle; audio intensity does not invent phonemes.
+      out[k]=x+w.sign*(w.corner*(smile*.12-mouth*.04)+w.jawWing*.034);
+      out[k+1]=y+lipDy+jawDrop+smileLift+eyelid+focusEye+browMove+
+        state.gazeVertical*w.eye*.22;
+      out[k+2]=z+w.baseDepth+lipMotion*(w.upper?.045:.085)+
+        w.cheek*(smile*.045+attention*.018)+w.midline*thought*.025;
     }
     Object.assign(pose,state);
     return pose;
@@ -77,10 +107,9 @@ export function createFacialRig(vertices) {
   return {updateInto,getPose:()=>({...pose})};
 }
 
-// An asymmetrical double blink, with slower human-like recovery.
-// Entirely deterministic: no changing mesh topology or random allocations.
-function blinkAt(t) {
-  const phase=((t+0.75)%6.2+6.2)%6.2;
+// Predictable, slightly asymmetrical human-like blinking; no randomness.
+function blinkAt(t){
+  const phase=((t+.75)%6.2+6.2)%6.2;
   const pulse=(at,width)=>Math.max(0,1-Math.abs(phase-at)/width);
   return Math.min(1,pulse(3.31,.145)+pulse(3.55,.095)*.58);
 }

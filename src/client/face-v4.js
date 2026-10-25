@@ -229,20 +229,21 @@ async function start(){
      }
      finishing.update({working,time:t,expression:expr,speaking,
        mouthOpen:pose.mouth,blink:pose.blink,attention:pose.attention,
-       thinking:pose.thinking,reducedMotion:motion.matches});
+       thinking:pose.thinking,gaze:pose.gaze,gazeVertical:pose.gazeVertical,
+       squint:pose.squint,reducedMotion:motion.matches});
      root.rotation.y= motion.matches ? .10 : .11 + .064*Math.sin(t*.35) + pose.attention*.025;
      root.rotation.x= motion.matches ? 0 : .015*Math.sin(t*.27);
      root.position.y=motion.matches ? 0 : .08*Math.sin(t*.82);
      halo.rotation.z=motion.matches?0:t*.01;
      renderer.render(scene,camera);
      document.documentElement.dataset.faceV4='ready';
-     if(firstFrame){firstFrame=false;progress(100,'Rosto V4.4 pronto');}
+     if(firstFrame){firstFrame=false;progress(100,'Rosto V4.5 pronto');}
    }
    const resume=()=>{if(!document.hidden&&!raf)raf=requestAnimationFrame(frame);};
    document.addEventListener('visibilitychange',resume);
    raf=requestAnimationFrame(frame);
    window.__jarvisV4=Object.freeze({
-     version:'4.4-refinement',engine:'Three.js/WebGL',
+     version:'4.5-face-polish',engine:'Three.js/WebGL',
      vertices:vertexCount,triangles:tri.length/3,edges:edgeIds.length/2,
      getStatus:()=>document.documentElement.dataset.faceV4,
      getPose:()=>rig.getPose()

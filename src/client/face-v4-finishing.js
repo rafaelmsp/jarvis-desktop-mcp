@@ -1,5 +1,5 @@
 /**
- * V4.4 — anatomical finishing pass for the canonical human wireframe.
+ * V4.5 — anatomical finishing pass for the canonical human wireframe.
  * Adds expressive eyes, contoured ears, cheekbones and neck/shoulder silhouette.
  * All geometry is local; no assets, external calls or audio capture.
  */
@@ -49,7 +49,14 @@ export function createFacialFinishing(THREE, root, faceVertices) {
     // Temple, cheekbone and forehead depth cues (no additional solid surface).
     dynamicLine([162,21,54,103,67,109,10,338,297,332,284,251],0x39bfe6,.20),
     dynamicLine([123,116,117,118,119,120,121,128],0x2caaca,.30),
-    dynamicLine([352,345,346,347,348,349,350,357],0x2caaca,.30)
+    dynamicLine([352,345,346,347,348,349,350,357],0x2caaca,.30),
+    // Delicate orbital folds make blinking readable, not only the iris scaling.
+    dynamicLine([33,160,158,133],0x85ecff,.36),
+    dynamicLine([263,387,385,362],0x85ecff,.36),
+    dynamicLine([33,144,153,133],0x39aed1,.30),
+    dynamicLine([263,373,380,362],0x39aed1,.30),
+    // Nostril wings remain anchored to the same canonical 3D landmarks.
+    dynamicLine([98,97,2,326,327],0x57ddf1,.39)
   ];
 
   // Procedural auricles based on proper ocular/nasal height, rather than flat circles.
@@ -113,6 +120,17 @@ export function createFacialFinishing(THREE, root, faceVertices) {
     ring(.43,.34,0x7dedff,.78);
     ring(.26,.25,0x32bfe7,.65);
     ring(.10,.10,0xc0faff,.48);
+    // Very fine non-textured iris spokes preserve the 1980s vector look.
+    const spokes=[];
+    for(let n=0;n<12;n++){
+      const a=2*Math.PI*n/12;
+      spokes.push(Math.cos(a)*.29,Math.sin(a)*.28,.004,
+        Math.cos(a)*.39,Math.sin(a)*.32,.004);
+    }
+    const spokeGeo=addGeometry(new THREE.BufferGeometry());
+    spokeGeo.setAttribute('position',new THREE.Float32BufferAttribute(spokes,3));
+    const spokeLines=new THREE.LineSegments(spokeGeo,rgba(0x64cfe9,.35,false));
+    iris.add(spokeLines);objects.push(spokeLines);
     const glint=addGeometry(new THREE.SphereGeometry(.08,6,6));
     const dot=new THREE.Mesh(glint,addMaterial(new THREE.MeshBasicMaterial({
       color:0xc2f9ff,transparent:true,opacity:.86,depthWrite:false
@@ -136,7 +154,8 @@ export function createFacialFinishing(THREE, root, faceVertices) {
   }
 
   function update({working, time=0, expression='neutral', speaking=false,
-    mouthOpen=0, blink=0, attention=0, thinking=0, reducedMotion=false}) {
+    mouthOpen=0, blink=0, attention=0, thinking=0, gaze=0,
+    gazeVertical=0, squint=0, reducedMotion=false}) {
     for(const f of [...dynamicContours,noseHighlight]){
       for(let j=0;j<f.ids.length;j++){
         const idx=f.ids[j]*3,k=j*3;
@@ -145,12 +164,11 @@ export function createFacialFinishing(THREE, root, faceVertices) {
       f.geo.attributes.position.needsUpdate=true;
     }
     // Iris remains within the eye socket; subtle attention/gaze changes.
-    const gaze=reducedMotion?0:Math.sin(time*.53)*.045;
     for (const [i,eye] of eyes.entries()) {
-      eye.scale.y=Math.max(.12,1-.86*blink-(expression==='happy'?.12:0));
-      eye.position.y=2.64+(expression==='surprised'?.06:0)+(attention*.028);
-      eye.position.x=(i===0?-3.22:3.22)+gaze;
-      eye.rotation.y= (i===0 ? .025:-.025) + thinking*.028;
+      eye.scale.y=Math.max(.10,1-.87*blink-.30*squint-(expression==='happy'?.06:0));
+      eye.position.y=2.64+(expression==='surprised'?.06:0)+attention*.028+gazeVertical;
+      eye.position.x=(i===0?-3.22:3.22)+(reducedMotion?0:gaze);
+      eye.rotation.y=(i===0?.025:-.025)+thinking*.028;
       eye.scale.x=1+attention*.023;
     }
     eyeSocketGlow.opacity=expression==='listening'?.10:.046;
