@@ -4,6 +4,16 @@ Avatar visual para Windows 10 com **dois modos** (núcleo energético e rosto ho
 
 A inteligência e a conversa permanecem na janela oficial do ChatGPT; a interface gráfica é controlada por ferramentas MCP **quando conectadas e chamadas explicitamente**. O painel não lê o áudio nem as mensagens do ChatGPT automaticamente.
 
+## Conceito visual humanoide — JARVIS V4
+
+![Conceito JARVIS V4: rosto humanoide com malha wireframe azul](assets/jarvis_humanoide_grid_conceito.webp)
+
+[Visualizar a prévia V4 no GitHub](assets/jarvis_humanoide_grid_conceito.webp)
+
+Esta imagem é uma **prévia otimizada para web**, baseada no conceito visual aprovado: anatomia facial humanoide, triangulação azul-ciano e estética de computação gráfica dos anos 1980.
+
+**Estado de integração:** o arquivo de referência foi publicado no repositório, mas o rosto animado do painel ainda é um renderizador separado. É preciso implementar e validar a adaptação do visual V4 antes de substituir o rosto atual. Voz, microfone, núcleo e ferramentas MCP permanecem inalterados.
+
 ## Executar no Windows 10
 
 Requer Node.js 20+ e Edge/Chrome. Não necessita `npm install`.
