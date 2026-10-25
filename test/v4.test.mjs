@@ -81,3 +81,24 @@ test('a interface anima a boca no modo falando e mostra a porta correta',async()
   assert.ok(app.includes("window.location.port || '80'"), 'porta é derivada da URL');
   assert.ok(html.includes('id="portLabel"'), 'rodapé exibe porta dinâmica');
 });
+
+test('acabamento humanoide cria detalhes dos olhos e orelhas e libera recursos',async()=>{
+  const THREE=await import('three');
+  const {createFacialFinishing}=await import('../src/client/face-v4-finishing.js');
+  const mesh=JSON.parse(await fs.readFile(path.join(root,'public/assets/models/canonical-face.json'),'utf8'));
+  const vertices=new Float32Array(mesh.vertices.flat());
+  const group=new THREE.Group();
+  const details=createFacialFinishing(THREE,group,vertices);
+  assert.ok(group.children.length>=20,'o rosto recebe contornos e olhos modelados');
+  details.update({working:vertices,time:0,expression:'neutral',speaking:false,reducedMotion:true});
+  details.update({working:vertices,time:1.2,expression:'happy',speaking:false,reducedMotion:false});
+  details.update({working:vertices,time:2.1,expression:'speaking',speaking:true,reducedMotion:false});
+  details.dispose();
+  assert.equal(group.children.length,0,'geometrias extras desconectadas do rosto');
+});
+test('olhos e boca mantêm contornos sem triangulação de dentes',async()=>{
+  const code=await fs.readFile(path.join(root,'src/client/face-v4.js'),'utf8');
+  assert.ok(code.includes('detailZone(u,v)'));
+  assert.ok(code.includes("createFacialFinishing(THREE,root,vertices)"));
+  assert.ok(code.includes('finishing.dispose()'));
+});

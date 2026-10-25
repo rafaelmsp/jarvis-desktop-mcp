@@ -5,6 +5,7 @@
  * Preserves original MCP state machine, browser voice and optional microphone.
  */
 import * as THREE from 'three';
+import {createFacialFinishing} from './face-v4-finishing.js';
 
 const $ = id => document.getElementById(id);
 const stage=$('face3dViewport');
@@ -53,6 +54,16 @@ async function start(){
    darkSurface.renderOrder=0;
    root.add(darkSurface);
 
+   // Suppress grid segments that visually resemble teeth or filled eyelids.
+   // Anatomical eyelid and lip outlines remain visible in the contour layers.
+   const detailZone=(a,b)=>{
+     const ax=vertices[a*3],ay=vertices[a*3+1];
+     const bx=vertices[b*3],by=vertices[b*3+1];
+     const x=(ax+bx)*.5,y=(ay+by)*.5;
+     const mouth=(x/1.98)**2+((y+4.32)/.34)**2<1;
+     const eye=((Math.abs(x)-3.18)/.93)**2+((y-2.61)/.27)**2<1;
+     return mouth||eye;
+   };
    // Unique topological edges; two line layers share one dynamic set of vertices.
    const edgeSet=new Set();
    const edgeIds=[];
@@ -60,7 +71,7 @@ async function start(){
      const a=tri[i],b=tri[i+1],c=tri[i+2];
      for(const [u,v] of [[a,b],[b,c],[c,a]]){
        const low=Math.min(u,v),high=Math.max(u,v),key=low*468+high;
-       if(!edgeSet.has(key)){edgeSet.add(key);edgeIds.push(u,v);}
+       if(!edgeSet.has(key)){edgeSet.add(key);if(!detailZone(u,v))edgeIds.push(u,v);}
      }
    }
    const edgePositions=new Float32Array(edgeIds.length*3);
@@ -108,14 +119,7 @@ async function start(){
      }));
      root.add(obj);return obj;
    };
-   // Ears: anatomical height (eyes-to-nose line), recessed behind cheekbone.
-   for(const side of [-1,1]){
-     arc([[side*6.75,2.7,-1.1],[side*7.85,2.2,-.95],[side*8.35,.85,-1],
-          [side*8.32,-1.8,-1.1],[side*7.55,-3.2,-.65],
-          [side*6.92,-2.35,-.2],[side*6.85,.8,-.7]],0x65def1,.64);
-     arc([[side*7.18,1.52,-.35],[side*7.70,.6,-.17],[side*7.63,-1.15,-.15],
-          [side*7.13,-1.95,-.06]],0x3abfe2,.43);
-   }
+   // Ear cartilage is provided by the V4.1 anatomical finishing module.
 
    // Neck: sloped collars and transverse rings, not a spherical base.
    const neckY=[-8.5,-10.4,-12.45];
@@ -172,6 +176,7 @@ async function start(){
      line.renderOrder=5; root.add(line);
      return {ids,pos,geo,line};
    });
+   const finishing=createFacialFinishing(THREE,root,vertices);
    const vertexCount=vertices.length/3;
    const soft=(x,y,cx,cy,sx,sy)=>
      Math.exp(-(((x-cx)/sx)**2+((y-cy)/sy)**2)*1.4);
@@ -229,6 +234,7 @@ async function start(){
        }
        f.geo.attributes.position.needsUpdate=true;
      }
+     finishing.update({working,time:t,expression:expr,speaking,reducedMotion:motion.matches});
      root.rotation.y= motion.matches ? .10 : .11 + .064*Math.sin(t*.35);
      root.rotation.x= motion.matches ? 0 : .015*Math.sin(t*.27);
      root.position.y=motion.matches ? 0 : .08*Math.sin(t*.82);
@@ -240,7 +246,7 @@ async function start(){
    document.addEventListener('visibilitychange',resume);
    raf=requestAnimationFrame(frame);
    window.__jarvisV4=Object.freeze({
-     version:'4.0-preview',engine:'Three.js/WebGL',
+     version:'4.1-preview',engine:'Three.js/WebGL',
      vertices:vertexCount,triangles:tri.length/3,edges:edgeIds.length/2,
      getStatus:()=>document.documentElement.dataset.faceV4
    });
@@ -248,6 +254,7 @@ async function start(){
      destroyed=true;cancelAnimationFrame(raf);resizer.disconnect();
      shape.dispose();lineShape.dispose();dots.dispose();particleGeom.dispose();
      for(const f of featureLines){f.geo.dispose();f.line.material.dispose();}
+     finishing.dispose();
      backGeom.dispose();backMesh.geometry.dispose();
      darkSurface.material.dispose();glowLines.material.dispose();
      crispLines.material.dispose();points.material.dispose();halo.material.dispose();

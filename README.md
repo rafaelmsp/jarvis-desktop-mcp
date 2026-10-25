@@ -4,15 +4,15 @@ Avatar visual para Windows 10 com **dois modos** (núcleo energético e rosto ho
 
 A inteligência e a conversa permanecem na janela oficial do ChatGPT; a interface gráfica é controlada por ferramentas MCP **quando conectadas e chamadas explicitamente**. O painel não lê o áudio nem as mensagens do ChatGPT automaticamente.
 
-## Conceito visual humanoide — JARVIS V4
+## JARVIS V4.1 — Humanoide 3D em wireframe azul
 
-![Conceito JARVIS V4: rosto humanoide com malha wireframe azul](assets/jarvis_humanoide_grid_conceito.webp)
+![Prévia real do JARVIS V4.1](docs/v4-refinement-preview.webp)
 
-[Visualizar a prévia V4 no GitHub](assets/jarvis_humanoide_grid_conceito.webp)
+A **branch `feature/jarvis-v4-humanoid`** contém a V4.1 experimental, com geometria anatômica MediaPipe (468 vértices, 898 triângulos), malha e partículas WebGL/Three.js, olhos e orelhas detalhados, pescoço e expressões animadas. O visual preserva o conceito futurista dos anos 1980 e o modo núcleo, a voz e os comandos MCP.
 
-Esta imagem é uma **prévia otimizada para web**, baseada no conceito visual aprovado: anatomia facial humanoide, triangulação azul-ciano e estética de computação gráfica dos anos 1980.
+[Ver o relatório técnico do refinamento](docs/v4.1-refinamento.md) · [Ver a referência estética original](assets/jarvis_humanoide_grid_conceito.webp)
 
-**Estado de integração:** o arquivo de referência foi publicado no repositório, mas o rosto animado do painel ainda é um renderizador separado. É preciso implementar e validar a adaptação do visual V4 antes de substituir o rosto atual. Voz, microfone, núcleo e ferramentas MCP permanecem inalterados.
+**Importante:** o modelo V4.1 é um protótipo. Para compilar a partir das fontes, execute `npm ci` e `npm run build-v4`. O bundle WebGL já está incluído, portanto a execução local com `npm start` não exige download de bibliotecas. Esta versão **não foi mesclada na `main`** até sua aprovação final.
 
 ## Executar no Windows 10
 
