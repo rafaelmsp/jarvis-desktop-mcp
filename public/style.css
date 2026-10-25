@@ -54,3 +54,6 @@ body.alert #wireframeFace{filter:drop-shadow(0 0 10px rgba(243,186,89,.35))}
  filter:drop-shadow(0 0 3px rgba(20,216,255,.55));
 }
 @media(max-width:450px){.avatar.face{transform:scale(.85)}}
+
+/* Conceito visual V4: link discreto, sem substituir avatar nem voz */
+.concept-link{display:block;margin-top:14px;padding:9px 10px;text-decoration:none;border:1px solid rgba(67,215,250,.32);color:#8bddf5;text-align:center;font-size:11px;letter-spacing:.5px;background:rgba(9,52,76,.35)}.concept-link:hover,.concept-link:focus-visible{border-color:#50eaff;color:#ecffff;background:rgba(11,114,154,.28)}
