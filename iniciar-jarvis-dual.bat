@@ -7,13 +7,13 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
-echo JARVIS V4.3 - PC e CELULAR (sem voz propria)
+echo JARVIS V4.7 - PC e CELULAR (sem voz propria)
 echo.
 powershell -NoProfile -Command "try { $r=Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 http://127.0.0.1:3766/api/state; exit 0 } catch { exit 1 }"
 if errorlevel 1 (
   echo Iniciando avatar na porta 3766...
-  start "JARVIS V4.3 - SERVIDOR" cmd /k "set JARVIS_PORT=3766&& node src\server.mjs"
-  timeout /t 3 /nobreak >nul
+  start "JARVIS V4.7 - SERVIDOR" cmd /k "set JARVIS_PORT=3766&& node src\server.mjs"
+  powershell -NoProfile -Command "Start-Sleep -Seconds 3"
 ) else (
   echo O painel na porta 3766 ja esta online.
 )

@@ -35,6 +35,14 @@ A V4.6 (`feature/jarvis-v4.6-natural-face`) melhora o **fechamento dos lábios e
 
 [Consulte a implementação e os testes da V4.6](docs/refinamento-v4.6.md).
 
+## JARVIS V4.7 — Olhar, expressões e acesso LAN com IP automático
+
+A versão V4.7 está isolada em `feature/jarvis-v4.7-expression-dynamics`: implementa olhar com pausas naturais, piscadas de ritmo menos repetitivo e movimentos sutis de sobrancelhas, bochechas e cabeça durante a fala. A geometria original, o sistema MCP, o monitor de áudio Windows e a barra de progresso percentual permanecem preservados.
+
+**Novo acesso LAN:** `iniciar-jarvis-rede.bat` descobre automaticamente o IPv4 privado atual do PC, evitando vincular o serviço a um IP antigo. Isso corrige a falha `EADDRNOTAVAIL` observada quando a Ethernet passou de `192.168.0.132` para `192.168.1.65`. O visualizador da porta 3767 continua somente leitura, sem comandos remotos nem exposição pública.
+
+[Documentação e validação da V4.7](docs/refinamento-v4.7.md).
+
 ## Sincronização labial experimental por áudio de saída (V4.3)
 
 O `scripts/jarvis-lipsync.py` captura exclusivamente amostras transitórias do dispositivo **padrão de saída do Windows** via loopback WASAPI, extrai somente a amplitude RMS e descarta imediatamente o áudio. Não há gravação, transcrição, rede externa nem captura de microfone. O daemon manda valores numéricos para `127.0.0.1:3766` com token local. O modelo 3D abre e fecha a boca com base nesses valores, independentemente de chamadas MCP por turno. Se o monitor de áudio parar, a fala não fica presa.
@@ -49,7 +57,7 @@ O monitor foi instalado em um ambiente Python isolado em `%LOCALAPPDATA%\\Jarvis
 
 ## Acesso por outros aparelhos na rede local (visualização)
 
-No PC, mantenha o Jarvis na porta 3766 e execute `iniciar-jarvis-rede.bat`. Em outro dispositivo da mesma rede, abra **http://192.168.0.132:3767/**. A interface replica as expressões do rosto sem permitir comandos HTTP de outros aparelhos; o MCP continua protegido no localhost. Se o Windows bloquear a conexão, siga [Acesso pela rede local](docs/acesso-rede-local.md) para liberar somente TCP 3767 em rede Privada.
+No PC, inicie `iniciar-jarvis-dual.bat` (porta 3766) e depois `iniciar-jarvis-rede.bat`. **O inicializador agora detecta automaticamente o IP privado atual** e mostra a URL para o celular, conectado à mesma rede. No teste de 25/10/2026, o endereço foi `http://192.168.1.65:3767/`, mas ele pode mudar. A porta 3767 continua apenas para visualização GET/SSE; o MCP permanece protegido no localhost. Veja [Acesso seguro pela rede local](docs/acesso-rede-local.md).
 
 ## Executar no Windows 10
 
@@ -75,7 +83,7 @@ Este é um **protótipo de interface**, não um aplicativo `.exe` nem um assiste
 
 ## Segurança
 
-A interface funciona somente em localhost e utiliza token local para comandos MCP. Evite disponibilizar a porta na rede ou inserir dados confidenciais nas legendas. Nunca publique arquivos com senhas ou tokens.
+O servidor principal e os comandos MCP continuam restritos a `127.0.0.1` e utilizam token local. O visualizador separado da porta 3767 atende exclusivamente HTTP GET/SSE em um IP privado da LAN; não fornece acesso a comandos de controle. Não encaminhe portas pelo roteador nem exponha o serviço diretamente à internet. Nunca publique arquivos com senhas ou tokens e evite dados confidenciais nas legendas.
 
 Os projetos LexJuridicus, Codex e Desktop Commander **não são alterados**.
 

@@ -221,7 +221,7 @@ async function start(){
      // Comando MCP do celular prevalece temporariamente, sem desativar o loopback do PC.
      const audioDriven=avatar.dataset.audioSync==='true' && avatar.dataset.remoteTurnActive!=='true';
      const strength=Math.max(0,Math.min(1,Number(avatar.dataset.audioLevel)||0));
-     // Anatomical deformations use the V4.6 rig with closed-mouth resting pose.
+     // V4.7 rig adds gaze dwell, less periodic blinks and amplitude-led facial accents.
      const pose=rig.updateInto(working,{time:t,delta,expression:expr,speaking,
        audioDriven,audioLevel:strength,reducedMotion:motion.matches});
      shape.attributes.position.needsUpdate=true;
@@ -244,20 +244,24 @@ async function start(){
      finishing.update({working,time:t,expression:expr,speaking,
        mouthOpen:pose.mouth,blink:pose.blink,attention:pose.attention,
        thinking:pose.thinking,gaze:pose.gaze,gazeVertical:pose.gazeVertical,
-       squint:pose.squint,reducedMotion:motion.matches});
-     root.rotation.y= motion.matches ? .10 : .11 + .064*Math.sin(t*.35) + pose.attention*.025;
-     root.rotation.x= motion.matches ? 0 : .015*Math.sin(t*.27);
+       squint:pose.squint,speechAccent:pose.speechAccent,
+       reducedMotion:motion.matches});
+     // Small eye-led head-follow keeps the hologram natural in long dialogue.
+     root.rotation.y= motion.matches ? .10 : .11+.054*Math.sin(t*.35)+
+       pose.attention*.020 + pose.gaze*.28;
+     root.rotation.x= motion.matches ? 0 : .014*Math.sin(t*.27)+
+       pose.gazeVertical*.19+pose.speechAccent*.012;
      root.position.y=motion.matches ? 0 : .08*Math.sin(t*.82);
      halo.rotation.z=motion.matches?0:t*.01;
      renderer.render(scene,camera);
      document.documentElement.dataset.faceV4='ready';
-     if(firstFrame){firstFrame=false;progress(100,'Rosto V4.6 pronto');}
+     if(firstFrame){firstFrame=false;progress(100,'Rosto V4.7 pronto');}
    }
    const resume=()=>{if(!document.hidden&&!raf)raf=requestAnimationFrame(frame);};
    document.addEventListener('visibilitychange',resume);
    raf=requestAnimationFrame(frame);
    window.__jarvisV4=Object.freeze({
-     version:'4.6-natural-expression',engine:'Three.js/WebGL',
+     version:'4.7-dialogue-expression',engine:'Three.js/WebGL',
      vertices:vertexCount,triangles:tri.length/3,edges:edgeIds.length/2,
      getStatus:()=>document.documentElement.dataset.faceV4,
      getPose:()=>rig.getPose()

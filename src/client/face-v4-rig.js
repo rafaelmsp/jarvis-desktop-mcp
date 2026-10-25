@@ -1,9 +1,11 @@
 /**
- * JARVIS V4.6 — anatomical expression rig and resting-lip correction.
+ * JARVIS V4.7 — expressive gaze, blinks, vocal accents and resting-lip correction.
  * Canonical topology (468 landmarks) remains unchanged.
  * Local weighted regions are calculated ONCE, not every animation frame.
  * Lip movement is driven by amplitude, not phoneme identification.
  */
+import {blinkAt,gazeAt} from './face-v4-dynamics.js';
+
 export const clamp01 = n => Math.min(1, Math.max(0, Number.isFinite(n) ? n : 0));
 const gauss=(x,y,cx,cy,sx,sy)=>
   Math.exp(-1.65*(((x-cx)/sx)**2+((y-cy)/sy)**2));
@@ -47,7 +49,7 @@ export function createFacialRig(vertices) {
   });
   const state={
     mouth:0,smile:0,attention:0,thinking:0,alert:0,surprise:0,
-    blink:0,gaze:0,gazeVertical:0,squint:0
+    blink:0,gaze:0,gazeVertical:0,squint:0,speechAccent:0
   };
   const pose={...state};
 
@@ -61,6 +63,7 @@ export function createFacialRig(vertices) {
     const vocal=audioDriven
       ? (speaking ? .1+.85*Math.pow(intensity,.72) : 0)
       : (speaking ? .25+.54*(.5+.5*Math.sin(time*13.8)) : 0);
+    const gazeTarget=gazeAt(time,expression,reducedMotion);
     const targets={
       mouth:Math.max(vocal,expression==='surprised'?.66:0),
       smile:expression==='happy'?1:0,
@@ -68,17 +71,20 @@ export function createFacialRig(vertices) {
       thinking:expression==='thinking'?1:0,
       alert:expression==='alert'?1:0,
       surprise:expression==='surprised'?1:0,
-      blink:reducedMotion?0:blinkAt(time),
-      gaze:reducedMotion?0:Math.sin(time*.49)*.055,
-      gazeVertical:reducedMotion?0:Math.sin(time*.31)*.026,
+      blink:blinkAt(time,reducedMotion),
+      gaze:gazeTarget.x,
+      gazeVertical:gazeTarget.y,
+      speechAccent:speaking?clamp01(vocal*.76):0,
       squint:expression==='happy'?.23:expression==='listening'?.13:
         expression==='thinking'?.10:0
     };
     for(const key of Object.keys(state)){
       const attack=key==='mouth'?.055:key==='blink'?.028:
-        key==='gaze'||key==='gazeVertical'?.28:.17;
+        key==='speechAccent'?.12:
+        key==='gaze'||key==='gazeVertical'?.11:.17;
       const release=key==='mouth'?.095:key==='blink'?.042:
-        key==='gaze'||key==='gazeVertical'?.28:.23;
+        key==='speechAccent'?.22:
+        key==='gaze'||key==='gazeVertical'?.16:.23;
       const tau=targets[key]>state[key]?attack:release;
       state[key]=mix(state[key],targets[key],1-Math.exp(-d/tau));
     }
@@ -98,23 +104,18 @@ export function createFacialRig(vertices) {
         state.squint*(y>2.64?.06:-.028));
       const focusEye=w.eye*(attention*.048-thought*.055);
       const browMove=w.brow*(attention*.13+thought*.09+
-        surprise*.32-state.alert*.17);
+        surprise*.32-state.alert*.17+state.speechAccent*.052);
       // Shape shifts remain subtle; audio intensity does not invent phonemes.
       out[k]=x+w.sign*(w.corner*(smile*.12-mouth*.04)+w.jawWing*.034);
       out[k+1]=y+lipSeal+lipDy+jawDrop+smileLift+eyelid+focusEye+browMove+
+        w.corner*state.speechAccent*.040+
         state.gazeVertical*w.eye*.22;
       out[k+2]=z+w.baseDepth+lipMotion*(w.upper?.045:.085)+
-        w.cheek*(smile*.045+attention*.018)+w.midline*thought*.025;
+        w.cheek*(smile*.045+attention*.018+state.speechAccent*.045)+
+        w.midline*thought*.025;
     }
     Object.assign(pose,state);
     return pose;
   }
   return {updateInto,getPose:()=>({...pose})};
-}
-
-// Predictable, slightly asymmetrical human-like blinking; no randomness.
-function blinkAt(t){
-  const phase=((t+.75)%6.2+6.2)%6.2;
-  const pulse=(at,width)=>Math.max(0,1-Math.abs(phase-at)/width);
-  return Math.min(1,pulse(3.31,.145)+pulse(3.55,.095)*.58);
 }
