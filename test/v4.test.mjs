@@ -192,3 +192,12 @@ test('sessão de voz silenciosa gera pensando, falando e ouvindo, com parada', a
     await fs.rm(tokenPath,{force:true}).catch(()=>{});
   }
 });
+
+test('dois canais coexistem: mouth renderer alterna entre loopback do PC e MCP do celular', async()=>{
+  const renderer=await fs.readFile(path.join(root,'src/client/face-v4.js'),'utf8');
+  const client=await fs.readFile(path.join(root,'public/app.js'),'utf8');
+  assert.ok(renderer.includes("avatar.dataset.remoteTurnActive!=='true'"), 'durante celular, movimento nao depende de nivel do PC');
+  assert.ok(client.includes('avatar.dataset.remoteTurnActive='), 'cliente propaga controle MCP para renderer');
+  assert.ok(client.includes('PC · ÁUDIO WINDOWS ATIVO'), 'interface preserva o modo local');
+  assert.ok(client.includes('CELULAR · MCP DISPONÍVEL'), 'interface exibe o modo celular');
+});

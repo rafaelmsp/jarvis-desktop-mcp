@@ -200,7 +200,12 @@ async function start(){
      const t=ms/1000;
      const expr=avatar.dataset.expression||'neutral';
      const speaking=avatar.dataset.speaking==='true';
-     const mouth= speaking ? (.14+.64*(.5+.5*Math.sin(t*15))) : expr==='surprised'? .85 : 0;
+     // No modo loopback, a amplitude real dirige a abertura (sem fonemas nem gravação).
+     // Comando MCP do celular prevalece temporariamente, sem desativar o loopback do PC.
+     const audioDriven=avatar.dataset.audioSync==='true' && avatar.dataset.remoteTurnActive!=='true';
+     const strength=Math.max(0,Math.min(1,Number(avatar.dataset.audioLevel)||0));
+     const mouth= audioDriven ? (speaking ? .08 + .78*Math.pow(strength,.72) : 0) :
+       speaking ? (.14+.64*(.5+.5*Math.sin(t*15))) : expr==='surprised'? .85 : 0;
      const happy=expr==='happy'?1:0;
      const blink=motion.matches?0:(Math.max(0,1-Math.abs((t%5.8)-3.7)/.12));
      const narrowed=expr==='happy'?.14:expr==='thinking'?.08:0;
@@ -246,7 +251,7 @@ async function start(){
    document.addEventListener('visibilitychange',resume);
    raf=requestAnimationFrame(frame);
    window.__jarvisV4=Object.freeze({
-     version:'4.1-preview',engine:'Three.js/WebGL',
+     version:'4.3-preview',engine:'Three.js/WebGL',
      vertices:vertexCount,triangles:tri.length/3,edges:edgeIds.length/2,
      getStatus:()=>document.documentElement.dataset.faceV4
    });

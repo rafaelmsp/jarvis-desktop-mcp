@@ -15,6 +15,9 @@ let state = initialState();
 const clients = new Set();
 let replyAnimationTimer = null;
 let thinkingTimer = null;
+let lastAudioFrameAt = 0;
+// Comandos vindos do celular têm prioridade temporária sobre o loopback local.
+let remoteVisualTurnUntil = 0;
 
 const token = randomBytes(32).toString('hex');
 fs.writeFileSync(TOKEN_FILE, token, {mode: 0o600});
@@ -65,15 +68,30 @@ const server = http.createServer(async (req, res) => {
     }
     try {
       const command = await consume(req);
+      // O monitor WASAPI pode reconectar durante uma resposta remota; a confirmação
+      // idempotente não deve cancelar a animação que já está em curso.
+      if (command.action === 'set_audio_sync' && state.audioSync === command.value) {
+        return reply(res, 200, {ok:true, state});
+      }
       const nextState = applyCommand(state, command);
+      // Uma resposta móvel prevalece momentaneamente sobre frames locais do Windows.
+      // O monitor continua ativo e retoma o controle no fim da animação.
+      if (command.action === 'set_audio_level' && Date.now() < remoteVisualTurnUntil) {
+        lastAudioFrameAt = Date.now();
+        return reply(res, 200, {ok:true, state});
+      }
       // Novos comandos explícitos de fala/estado substituem uma animação temporizada anterior.
-      if (['animate_reply','voice_turn','set_voice_session','set_speaking','set_status','reset'].includes(command.action)) {
+      if (['animate_reply','voice_turn','set_voice_session','set_audio_sync','set_speaking','set_status','reset'].includes(command.action)) {
         clearTimeout(replyAnimationTimer);
         clearTimeout(thinkingTimer);
         replyAnimationTimer = null;
         thinkingTimer = null;
       }
       state = nextState;
+      if (command.action === 'voice_turn' || command.action === 'animate_reply') remoteVisualTurnUntil = Date.now() + (command.action === 'voice_turn' ? 450 : 0) + command.value * 1000;
+      else if (['set_voice_session','set_audio_sync','set_speaking','set_status','reset'].includes(command.action)) remoteVisualTurnUntil = 0;
+      if (command.action === 'set_audio_level') lastAudioFrameAt = Date.now();
+      if (command.action === 'set_audio_sync' && !command.value) lastAudioFrameAt = 0;
       if (command.action === 'voice_turn') {
         // Uma unica chamada MCP inicia pensando -> falando -> ouvindo.
         // As duracoes sao estimativas, nao eventos reais do audio.
@@ -84,6 +102,7 @@ const server = http.createServer(async (req, res) => {
           replyAnimationTimer = setTimeout(() => {
             replyAnimationTimer = null;
             state = applyCommand(state, {action:'set_speaking',value:false});
+            remoteVisualTurnUntil = 0;
             publish();
           }, command.value * 1000);
           replyAnimationTimer.unref();
@@ -94,6 +113,7 @@ const server = http.createServer(async (req, res) => {
         replyAnimationTimer = setTimeout(() => {
           replyAnimationTimer = null;
           state = applyCommand(state, {action:'set_speaking', value:false});
+          remoteVisualTurnUntil = 0;
           publish();
         }, command.value * 1000);
         replyAnimationTimer.unref();
@@ -109,8 +129,16 @@ const server = http.createServer(async (req, res) => {
     fs.createReadStream(f).pipe(res);
   } catch {reply(res, 500, {error:'Falha no arquivo'});}
 });
+// Se o monitor de áudio parar, a boca nunca fica presa em “falando”.
+const audioWatchdog = setInterval(() => {
+  if (state.audioSync && Date.now() >= remoteVisualTurnUntil && state.audioLevel > 0 && Date.now() - lastAudioFrameAt > 900) {
+    state = applyCommand(state, {action:'set_audio_level',value:0});
+    publish();
+  }
+}, 250);
+audioWatchdog.unref();
 const heartbeat = setInterval(() => {
   for (const client of clients) {try { client.write(': ping\n\n');} catch {clients.delete(client);}}
 }, 20_000);
-server.on('close', () => {clearInterval(heartbeat); clearTimeout(replyAnimationTimer); clearTimeout(thinkingTimer);});
+server.on('close', () => {clearInterval(heartbeat); clearInterval(audioWatchdog); clearTimeout(replyAnimationTimer); clearTimeout(thinkingTimer);});
 server.listen(PORT, HOST, () => console.log(`JARVIS online em http://${HOST}:${PORT}\nToken local: ${TOKEN_FILE}`));

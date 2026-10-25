@@ -50,6 +50,10 @@ function apply(state) {
   const changedCaption = lastCaption !== null && state.caption !== lastCaption;
   lastCaption = state.caption;
   current=state;
+  avatar.dataset.audioSync=String(Boolean(state.audioSync && state.voiceSession));
+  avatar.dataset.remoteTurnActive=String(Boolean(state.remoteTurnActive));
+  avatar.dataset.audioLevel=String(state.audioLevel || 0);
+  if ($('lipSyncStatus')) $('lipSyncStatus').textContent=state.remoteTurnActive?'EM USO · CELULAR / MCP':state.audioSync?'PC · ÁUDIO WINDOWS ATIVO  |  CELULAR · MCP DISPONÍVEL':'PC · SINCRONISMO DESATIVADO  |  CELULAR · MCP DISPONÍVEL';
   if (state.voiceSession) {
     // No modo visual, desabilitar som e captura locais.
     if (voiceEnabled) {
@@ -75,7 +79,7 @@ function apply(state) {
   $('caption').textContent=state.caption;
   $('activity').textContent=labels[state.status] || 'JARVIS ONLINE';
   $('renderStatus').textContent=state.status.toUpperCase();
-  $('modeLabel').textContent=state.mode==='core'?'CORE · V1':'SYNTH-FACE · V4.1';
+  $('modeLabel').textContent=state.mode==='core'?'CORE · V1':'SYNTH-FACE · V4.3';
   $('updated').textContent=new Date(state.lastEventAt).toLocaleTimeString('pt-BR');
   document.body.classList.toggle('alert',state.expression==='alert'||state.status==='error');
   document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===state.mode));

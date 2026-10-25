@@ -25,6 +25,18 @@ A V4.2 experimental acrescenta **avatar ventríloquo silencioso**: sessão ouvin
 
 [Leia a documentação do Protocolo JARVIS](docs/protocolo-jarvis-voz.md).
 
+## Sincronização labial experimental por áudio de saída (V4.3)
+
+O `scripts/jarvis-lipsync.py` captura exclusivamente amostras transitórias do dispositivo **padrão de saída do Windows** via loopback WASAPI, extrai somente a amplitude RMS e descarta imediatamente o áudio. Não há gravação, transcrição, rede externa nem captura de microfone. O daemon manda valores numéricos para `127.0.0.1:3766` com token local. O modelo 3D abre e fecha a boca com base nesses valores, independentemente de chamadas MCP por turno. Se o monitor de áudio parar, a fala não fica presa.
+
+O monitor foi instalado em um ambiente Python isolado em `%LOCALAPPDATA%\\JarvisLipSync\\venv`. Com o painel iniciado na porta 3766, utilize `powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\start-lipsync.ps1 -Mode start`, `-Mode status` ou `-Mode stop`. Ative **Iniciar sessão visual** no painel. Verifique o indicador **PC · ÁUDIO WINDOWS ATIVO | CELULAR · MCP DISPONÍVEL**. Após a primeira instalação, atualize a aba no Chrome (F5) para carregar o novo bundle.
+
+**Para iniciar os dois modos juntos na V4.3, use `iniciar-jarvis-dual.bat`**, na pasta do projeto. Ele inicia o avatar na porta 3766, reutiliza ou inicia o monitor de áudio do Windows e abre o Chrome, mantendo o inicializador antigo da porta 3765 inalterado.
+
+**Dois modos ao mesmo tempo:** o JARVIS aceita a saída de áudio do PC e os comandos visuais MCP da conversa no celular. Durante uma resposta enviada pelo celular, a animação temporizada prevalece sobre o nível do Windows; ao terminar, o sincronizador local retoma automaticamente, sem ser desligado. A interface identifica qual fonte está em uso. **O modo Voz do ChatGPT ainda precisa acionar o MCP em cada resposta; esse disparo não é garantido pelo plugin do Chrome.**
+
+**Limites:** é sincronismo de intensidade, não reconhecimento de fonemas. Como o loopback captura a **saída padrão inteira**, músicas, vídeos e outros aplicativos no mesmo dispositivo também podem mover a boca. Caso a voz do ChatGPT saia por outro dispositivo, ajuste a saída padrão do Windows. A conversa oficial do ChatGPT continua independente; o programa não recebe os eventos internos da voz do ChatGPT. É necessário iniciar o monitor novamente após reiniciar o PC; a inicialização automática não foi configurada.
+
 ## Executar no Windows 10
 
 Requer Node.js 20+ e Edge/Chrome. Não necessita `npm install`.
@@ -38,7 +50,7 @@ Requer Node.js 20+ e Edge/Chrome. Não necessita `npm install`.
 ## Funcionalidades
 
 - Rosto holográfico e núcleo circular com animações locais.
-- Expressões e estado visual controlados pelo painel ou por sete ferramentas MCP.
+- Expressões e estado visual controlados pelo painel e por onze ferramentas MCP (incluindo controle de sessão, resposta visual e sincronismo local).
 - Síntese de voz local em português no Chrome/Edge, ativada manualmente; a nova legenda recebida via MCP pode ser lida em voz alta.\n- Efeito de áudio com permissão do microfone (apenas volume local, sem gravação).
 - Servidor HTTP em `127.0.0.1` com atualizações SSE.
 - MCP por stdio; sem necessidade de API da OpenAI.
