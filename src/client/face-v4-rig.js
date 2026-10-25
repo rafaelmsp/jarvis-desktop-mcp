@@ -1,5 +1,5 @@
 /**
- * JARVIS V4.5 — non-destructive facial anatomy and expression rig.
+ * JARVIS V4.6 — anatomical expression rig and resting-lip correction.
  * Canonical topology (468 landmarks) remains unchanged.
  * Local weighted regions are calculated ONCE, not every animation frame.
  * Lip movement is driven by amplitude, not phoneme identification.
@@ -28,6 +28,9 @@ export function createFacialRig(vertices) {
     const eye=gauss(absX,y,3.16,2.64,1.58,.9)*front;
     const brow=gauss(absX,y,3.18,3.55,2.05,.78)*front;
     const midline=gauss(x,y,0,2.8,1.8,1.6)*front;
+    // The canonical inner lip gap is visible even in silence. Seal it gently
+    // in neutral/idle; release the seal as the audio mouth target opens.
+    const innerLip=gauss(x,y,0,-4.27,2.45,.80)*front;
     const noseBridge=gauss(x,y,0,.7,1.22,3.0)*front;
     const noseTip=gauss(x,y,0,-1.24,1.25,1.12)*front;
     const noseWing=gauss(absX,y,1.3,-1.67,.80,.78)*front;
@@ -36,7 +39,7 @@ export function createFacialRig(vertices) {
     const chin=gauss(x,y,0,-7.5,2.35,1.9)*front;
     const jawWing=gauss(absX,y,4.8,-5.5,2.0,2.5)*front;
     return {
-      front,lip,corner,cheek,jaw,eye,brow,midline,jawWing,
+      front,lip,corner,cheek,jaw,eye,brow,midline,jawWing,innerLip,
       upper:y>=-4.32,center:1-ease(1.45,3.1,absX),sign:Math.sign(x),
       baseDepth:.065*noseBridge+.105*noseTip+.07*noseWing+
         .115*cheekbone-.052*cheekHollow+.055*chin
@@ -87,6 +90,8 @@ export function createFacialRig(vertices) {
       // Center opens more than the corners; the mandible moves independently.
       const lipMotion=mouth*w.lip*(.72+.28*w.center);
       const lipDy=w.upper?lipMotion*.34:-lipMotion*.49;
+      // Resting inner lip contour closes without affecting outer lip silhouette.
+      const lipSeal=w.innerLip*(1-mouth)*(w.upper?-.23:.23);
       const jawDrop=-mouth*w.jaw*.19;
       const smileLift=smile*(w.corner*.34+w.cheek*.07);
       const eyelid=w.eye*(blink*(y>2.64?-.35:.12)-
@@ -96,7 +101,7 @@ export function createFacialRig(vertices) {
         surprise*.32-state.alert*.17);
       // Shape shifts remain subtle; audio intensity does not invent phonemes.
       out[k]=x+w.sign*(w.corner*(smile*.12-mouth*.04)+w.jawWing*.034);
-      out[k+1]=y+lipDy+jawDrop+smileLift+eyelid+focusEye+browMove+
+      out[k+1]=y+lipSeal+lipDy+jawDrop+smileLift+eyelid+focusEye+browMove+
         state.gazeVertical*w.eye*.22;
       out[k+2]=z+w.baseDepth+lipMotion*(w.upper?.045:.085)+
         w.cheek*(smile*.045+attention*.018)+w.midline*thought*.025;

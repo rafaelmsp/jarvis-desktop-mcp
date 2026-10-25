@@ -40,9 +40,18 @@ async function start(){
    renderer=new THREE.WebGLRenderer({alpha:true,antialias:true,powerPreference:'low-power'});
    renderer.setClearColor(0x000000,0);
    renderer.outputColorSpace=THREE.SRGBColorSpace;
-   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.75));
+   // Limit mobile GPU load without changing the anatomical resolution.
+   const pixelBudget=()=>window.matchMedia('(max-width: 640px)').matches?1.4:1.75;
+   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,pixelBudget()));
    stage.replaceChildren(renderer.domElement);
    renderer.domElement.setAttribute('aria-hidden','true');
+   renderer.domElement.addEventListener('webglcontextlost',event=>{
+     event.preventDefault();
+     progress(0,'Contexto gráfico interrompido');
+   });
+   renderer.domElement.addEventListener('webglcontextrestored',()=>{
+     window.location.reload();
+   });
 
    const root=new THREE.Group();
    scene.add(root);
@@ -115,6 +124,7 @@ async function start(){
      new THREE.LineBasicMaterial({color:0x179fcb,opacity:.23,transparent:true,depthWrite:false}));
    root.add(backMesh);
 
+   const orbitalCurves=[];
    const arc=(pts,color=0x54dfff,alpha=.65)=>{
      const curve=new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(...p)),false,'centripetal');
      const samples=curve.getPoints(32);
@@ -122,7 +132,7 @@ async function start(){
      const obj=new THREE.Line(geom,new THREE.LineBasicMaterial({
        color,transparent:true,opacity:alpha,blending:THREE.AdditiveBlending,depthWrite:false
      }));
-     root.add(obj);return obj;
+     root.add(obj);orbitalCurves.push(obj);return obj;
    };
    // Ear cartilage is provided by the V4.1 anatomical finishing module.
 
@@ -190,6 +200,7 @@ async function start(){
      const b=stage.getBoundingClientRect();
      w=Math.max(1,b.width);h=Math.max(1,b.height);
      camera.aspect=w/h;camera.updateProjectionMatrix();
+     renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,pixelBudget()));
      renderer.setSize(w,h,false);
    };
    const resizer=new ResizeObserver(resize);
@@ -210,7 +221,7 @@ async function start(){
      // Comando MCP do celular prevalece temporariamente, sem desativar o loopback do PC.
      const audioDriven=avatar.dataset.audioSync==='true' && avatar.dataset.remoteTurnActive!=='true';
      const strength=Math.max(0,Math.min(1,Number(avatar.dataset.audioLevel)||0));
-     // Anatomical deformations are smoothed by the reusable V4.4 facial rig.
+     // Anatomical deformations use the V4.6 rig with closed-mouth resting pose.
      const pose=rig.updateInto(working,{time:t,delta,expression:expr,speaking,
        audioDriven,audioLevel:strength,reducedMotion:motion.matches});
      shape.attributes.position.needsUpdate=true;
@@ -220,6 +231,9 @@ async function start(){
        edgePositions[q]=working[k];edgePositions[q+1]=working[k+1];edgePositions[q+2]=working[k+2];
      }
      lineShape.attributes.position.needsUpdate=true;
+     // Inner mouth contours are faint in neutral state, legible during speech.
+     featureLines[4].line.material.opacity=.68+pose.mouth*.11;
+     featureLines[5].line.material.opacity=.15+pose.mouth*.45;
      for(const f of featureLines){
        for(let j=0;j<f.ids.length;j++){
          const i=f.ids[j]*3,k=j*3;
@@ -237,13 +251,13 @@ async function start(){
      halo.rotation.z=motion.matches?0:t*.01;
      renderer.render(scene,camera);
      document.documentElement.dataset.faceV4='ready';
-     if(firstFrame){firstFrame=false;progress(100,'Rosto V4.5 pronto');}
+     if(firstFrame){firstFrame=false;progress(100,'Rosto V4.6 pronto');}
    }
    const resume=()=>{if(!document.hidden&&!raf)raf=requestAnimationFrame(frame);};
    document.addEventListener('visibilitychange',resume);
    raf=requestAnimationFrame(frame);
    window.__jarvisV4=Object.freeze({
-     version:'4.5-face-polish',engine:'Three.js/WebGL',
+     version:'4.6-natural-expression',engine:'Three.js/WebGL',
      vertices:vertexCount,triangles:tri.length/3,edges:edgeIds.length/2,
      getStatus:()=>document.documentElement.dataset.faceV4,
      getPose:()=>rig.getPose()
@@ -251,6 +265,7 @@ async function start(){
    window.addEventListener('beforeunload',()=>{
      destroyed=true;cancelAnimationFrame(raf);resizer.disconnect();
      shape.dispose();lineShape.dispose();dots.dispose();particleGeom.dispose();
+     for(const curve of orbitalCurves){curve.geometry.dispose();curve.material.dispose();}
      for(const f of featureLines){f.geo.dispose();f.line.material.dispose();}
      finishing.dispose();
      backGeom.dispose();backMesh.geometry.dispose();

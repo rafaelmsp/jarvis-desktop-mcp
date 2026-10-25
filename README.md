@@ -29,6 +29,12 @@ A V4.2 experimental acrescenta **avatar ventríloquo silencioso**: sessão ouvin
 
 A V4.4 (branch experimental `feature/jarvis-v4.4-face-refinement`) preserva a topologia original MediaPipe e melhora **lábios, mandíbula, olhos, sobrancelhas, olhar de escuta e transições de expressão**. A interface mostra uma **barra real de inicialização WebGL com percentagem numérica** até 100%. O sincronismo do áudio local e a prioridade do MCP remoto continuam disponíveis. Veja [detalhes, testes e recuperação](docs/refinamento-v4.4.md).
 
+## JARVIS V4.6 — Expressão natural e manutenção gráfica
+
+A V4.6 (`feature/jarvis-v4.6-natural-face`) melhora o **fechamento dos lábios em repouso** e a abertura durante a fala, suaviza a leitura dos contornos internos e mantém a ligação com o MCP e a captura local de áudio. Acrescenta controle adaptativo de pixels no celular, recuperação de contexto WebGL e liberação de recursos gráficos. A **barra de carregamento continua com percentual numérico até 100%**. A V4.5 e versões anteriores foram preservadas em suas branches separadas.
+
+[Consulte a implementação e os testes da V4.6](docs/refinamento-v4.6.md).
+
 ## Sincronização labial experimental por áudio de saída (V4.3)
 
 O `scripts/jarvis-lipsync.py` captura exclusivamente amostras transitórias do dispositivo **padrão de saída do Windows** via loopback WASAPI, extrai somente a amplitude RMS e descarta imediatamente o áudio. Não há gravação, transcrição, rede externa nem captura de microfone. O daemon manda valores numéricos para `127.0.0.1:3766` com token local. O modelo 3D abre e fecha a boca com base nesses valores, independentemente de chamadas MCP por turno. Se o monitor de áudio parar, a fala não fica presa.

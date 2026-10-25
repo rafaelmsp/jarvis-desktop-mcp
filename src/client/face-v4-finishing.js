@@ -1,5 +1,5 @@
 /**
- * V4.5 — anatomical finishing pass for the canonical human wireframe.
+ * V4.6 — anatomical finishing pass for the canonical human wireframe.
  * Adds expressive eyes, contoured ears, cheekbones and neck/shoulder silhouette.
  * All geometry is local; no assets, external calls or audio capture.
  */
@@ -172,9 +172,12 @@ export function createFacialFinishing(THREE, root, faceVertices) {
       eye.scale.x=1+attention*.023;
     }
     eyeSocketGlow.opacity=expression==='listening'?.10:.046;
-    // Mouth contour luminance follows actual opening and helps read speech.
-    const lipBrightness=.06+mouthOpen*.08;
-    for(const lip of dynamicContours.slice(7,10)) lip.line.material.opacity=.44+lipBrightness;
+    // Mouth rims remain visible while the inner seam is subdued in silence.
+    // During speech the inner contour brightens, emphasizing the opening
+    // without drawing solid teeth or a second, artificial mouth.
+    dynamicContours[7].line.material.opacity=.57+mouthOpen*.15;
+    dynamicContours[8].line.material.opacity=.52+mouthOpen*.12;
+    dynamicContours[9].line.material.opacity=.12+mouthOpen*.38;
   }
   function dispose() {
     for(const o of objects)o.parent?.remove(o);
