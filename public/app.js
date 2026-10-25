@@ -13,13 +13,46 @@ let audioContext = null;
 let analyser = null;
 let tick = 0;
 let micLevel = 0;
+let voiceEnabled = false;
+let lastCaption = null;
+let localSpeaking = false;
+const synth = window.speechSynthesis;
+function updateVoiceInfo(message) { $('voiceInfo').textContent = message; }
+function speakLocal(text) {
+  if (!voiceEnabled || !synth || !text.trim()) return;
+  synth.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'pt-BR';
+  utterance.rate = 1;
+  utterance.pitch = 0.95;
+  const choices = synth.getVoices();
+  utterance.voice = choices.find(v => v.lang.toLowerCase() === 'pt-br') || choices.find(v => v.lang.toLowerCase().startsWith('pt')) || null;
+  utterance.onstart = () => {
+    localSpeaking = true;
+    avatar.dataset.speaking = 'true';
+    $('activity').textContent = 'RESPONDENDO POR VOZ';
+    updateVoiceInfo('Falando...');
+  };
+  const finish = () => {
+    localSpeaking = false;
+    avatar.dataset.speaking = String(Boolean(current.speaking || current.status === 'speaking'));
+    $('activity').textContent = labels[current.status] || 'SISTEMA EM ESPERA';
+    updateVoiceInfo('Voz local pronta');
+  };
+  utterance.onend = finish;
+  utterance.onerror = event => { finish(); if (event.error !== 'interrupted' && event.error !== 'canceled') updateVoiceInfo('Erro de voz: ' + event.error); };
+  synth.speak(utterance);
+}
+
 const labels={idle:'SISTEMA EM ESPERA',listening:'ESCUTANDO',processing:'PROCESSANDO',speaking:'TRANSMITINDO',success:'OPERAÇÃO CONCLUÍDA',error:'ALERTA DO SISTEMA'};
 function apply(state) {
+  const changedCaption = lastCaption !== null && state.caption !== lastCaption;
+  lastCaption = state.caption;
   current=state;
   avatar.classList.toggle('face',state.mode==='face');
   avatar.classList.toggle('core',state.mode==='core');
   avatar.dataset.expression=state.expression;
-  avatar.dataset.speaking=String(Boolean(state.speaking || state.status==='speaking'));
+  avatar.dataset.speaking=String(Boolean(state.speaking || state.status==='speaking' || localSpeaking));
   $('caption').textContent=state.caption;
   $('activity').textContent=labels[state.status] || 'JARVIS ONLINE';
   $('renderStatus').textContent=state.status.toUpperCase();
@@ -28,6 +61,7 @@ function apply(state) {
   document.body.classList.toggle('alert',state.expression==='alert'||state.status==='error');
   document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===state.mode));
   document.querySelectorAll('[data-expression]').forEach(b=>b.classList.toggle('active',b.dataset.expression===state.expression));
+  if (changedCaption) speakLocal(state.caption);
 }
 async function control(action,value) {
   try {
@@ -38,7 +72,7 @@ async function control(action,value) {
 }
 for (const b of document.querySelectorAll('[data-mode]')) b.addEventListener('click',()=>control('set_mode',b.dataset.mode));
 for (const b of document.querySelectorAll('[data-expression]')) b.addEventListener('click',()=>control('set_expression',b.dataset.expression));
-function connection(ok) {$('connectionDot').parentElement.classList.toggle('connected',ok);$('connectionText').textContent=ok?'MCP LOCAL · ATIVO':'SEM CONEXÃO';}
+function connection(ok) {$('connectionDot').parentElement.classList.toggle('connected',ok);$('connectionText').textContent=ok?'PAINEL LOCAL · ATIVO':'PAINEL SEM CONEXÃO';}
 const events=new EventSource('/api/events');
 events.onopen=()=>connection(true);
 events.onmessage=ev=>{try{apply(JSON.parse(ev.data));}catch(e){console.warn(e);}};
@@ -59,6 +93,23 @@ async function toggleMic() {
   } catch(e) {button.textContent='Microfone indisponível';console.warn('Permissão:',e);}
 }
 $('micButton').addEventListener('click',toggleMic);
+$('voiceButton').addEventListener('click', () => {
+  if (!synth) { updateVoiceInfo('Síntese de voz indisponível neste navegador'); return; }
+  voiceEnabled = !voiceEnabled;
+  $('voiceButton').classList.toggle('active',voiceEnabled);
+  $('voiceButton').setAttribute('aria-pressed',String(voiceEnabled));
+  $('voiceButton').textContent = voiceEnabled ? '🔊 Voz local ativa' : '🔇 Ativar voz local';
+  if (voiceEnabled) speakLocal('Voz local ativada.');
+  else {synth.cancel();localSpeaking = false;avatar.dataset.speaking = String(Boolean(current.speaking));updateVoiceInfo('Voz desativada');}
+});
+$('testVoice').addEventListener('click', async () => {
+  const phrase = $('testText').value.trim();
+  if (!phrase) return;
+  if (!voiceEnabled) { updateVoiceInfo('Ative a voz local primeiro'); return; }
+  if (phrase === current.caption) speakLocal(phrase);
+  else await control('set_caption',phrase);
+});
+
 function animate() {
   tick+=.1;
   if(micEnabled&&analyser){
