@@ -31,3 +31,11 @@ O comando `scripts/jarvis-voice.ps1 -Mode turn -Seconds N` agora aciona `animate
 Isso reduz o atraso interno do estado visual, mas **não é sincronização por áudio ou fonemas**: os eventos de início/fim da voz Live do telefone não chegam diretamente ao PC. A latência de chamada MCP e as variações na duração efetiva da resposta permanecem. O JARVIS é um avatar silencioso, sem voz adicional.
 
 A interface móvel na porta 3767 é intencionalmente **somente leitura**: o CSS inibe `.controls` e o proxy aceita apenas `GET`. Estar no mesmo Wi-Fi não autoriza modificar estados; controles móveis completos exigem projeto de autenticação no servidor LAN. Não remover a restrição apenas no CSS.
+
+## Calibração de tempo móvel (25/10/2026)
+
+Em oito amostras locais do comando HTTP para a porta 3766 até a leitura do estado no proxy LAN 3767, a mediana foi **4,15 ms para Falando** e **4,0 ms para Ouvindo**; o pior início medido foi **12,4 ms**. Repetir com `node scripts/measure-lan-latency.mjs [url-lan]`. É um teste executado no PC contra o endereço LAN, **não** um teste do tempo real no navegador Android, da chamada MCP inteira nem do começo/fim da voz Live.
+
+O roteiro `scripts/jarvis-voice.ps1 -Mode turn -Seconds 12` usa agora margem de término antecipado configurável `-EndLeadMs 250` (0 a 1500 ms). Assim, o tempo de boca é `max(1, Seconds - EndLeadMs / 1000)`, preservando decimais; o comando exibe `animationSeconds` para auditoria. Se a voz parar antes, `-Mode listen` interrompe imediatamente o movimento e conserva a sessão. Não há eventos de áudio móvel em tempo real; esse é um ajuste experimental e não sincronismo perfeito. Não adicionar adiantamentos arbitrários de um a dois segundos: a maior latência aparente provavelmente envolve o momento em que a ferramenta MCP é chamada versus a síntese/reprodução da resposta, e a medição LAN não determina essa diferença.
+
+Como opção de previsão sem expor o texto, o comando `-Mode turn -WordCount 20` estima aproximadamente **7,742 s** a 155 palavras/minuto e aciona **7,492 s** de animação com `-EndLeadMs 250`. Ajuste com `-WordsPerMinute` (100 a 240). O parâmetro `-Seconds` permanece disponível quando uma duração melhor já for conhecida. O cálculo é uma heurística baseada em contagem de palavras, sem eventos ou acesso à voz do aplicativo.
