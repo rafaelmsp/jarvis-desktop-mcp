@@ -39,3 +39,18 @@ body.alert #wireframeFace{filter:drop-shadow(0 0 10px rgba(243,186,89,.35))}
  .face-data{display:none}.screen::after{inset:10% 2%}}
 @media(max-width:420px){.aura{transform:scale(.71);margin:-51px 0}.screen{min-height:510px}
  .center-info h1{font-size:16px;letter-spacing:2px}.side-meta{font-size:7px}.corners{font-size:8px}}
+
+
+/* JARVIS VECTORMESH 1986 — replaces only the face mode, preserves core, voice and MCP. */
+.avatar.face{width:270px;height:310px}
+.avatar.face .face-head{
+ display:block;position:relative;width:270px;height:310px;border:0;border-radius:0;
+ background:none;box-shadow:none;transform:none;animation:none;
+}
+.avatar.face .face-head::after{display:none}
+.avatar.face .face-head > :not(.wireframe-face){display:none}
+.avatar.face .wireframe-face{
+ display:block;width:100%;height:100%;
+ filter:drop-shadow(0 0 3px rgba(20,216,255,.55));
+}
+@media(max-width:450px){.avatar.face{transform:scale(.85)}}
