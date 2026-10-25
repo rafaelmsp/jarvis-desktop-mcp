@@ -1,5 +1,6 @@
 const $ = id => document.getElementById(id);
 const avatar = $('avatar');
+if ($('portLabel')) $('portLabel').textContent = window.location.port || '80';
 const audioValue = $('audioValue');
 const bars = Array.from({length:25},()=>{
   const bar = document.createElement('span');
@@ -35,7 +36,7 @@ function speakLocal(text) {
   };
   const finish = () => {
     localSpeaking = false;
-    avatar.dataset.speaking = String(Boolean(current.speaking || current.status === 'speaking'));
+    avatar.dataset.speaking = String(Boolean(current.speaking || current.status === 'speaking' || current.expression === 'speaking'));
     $('activity').textContent = labels[current.status] || 'SISTEMA EM ESPERA';
     updateVoiceInfo('Voz local pronta');
   };
@@ -52,7 +53,7 @@ function apply(state) {
   avatar.classList.toggle('face',state.mode==='face');
   avatar.classList.toggle('core',state.mode==='core');
   avatar.dataset.expression=state.expression;
-  avatar.dataset.speaking=String(Boolean(state.speaking || state.status==='speaking' || localSpeaking));
+  avatar.dataset.speaking=String(Boolean(state.speaking || state.status==='speaking' || state.expression==='speaking' || localSpeaking));
   $('caption').textContent=state.caption;
   $('activity').textContent=labels[state.status] || 'JARVIS ONLINE';
   $('renderStatus').textContent=state.status.toUpperCase();
@@ -100,7 +101,7 @@ $('voiceButton').addEventListener('click', () => {
   $('voiceButton').setAttribute('aria-pressed',String(voiceEnabled));
   $('voiceButton').textContent = voiceEnabled ? '🔊 Voz local ativa' : '🔇 Ativar voz local';
   if (voiceEnabled) speakLocal('Voz local ativada.');
-  else {synth.cancel();localSpeaking = false;avatar.dataset.speaking = String(Boolean(current.speaking));updateVoiceInfo('Voz desativada');}
+  else {synth.cancel();localSpeaking = false;avatar.dataset.speaking = String(Boolean(current.speaking || current.status==='speaking' || current.expression==='speaking'));updateVoiceInfo('Voz desativada');}
 });
 $('testVoice').addEventListener('click', async () => {
   const phrase = $('testText').value.trim();

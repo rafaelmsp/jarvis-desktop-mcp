@@ -74,3 +74,10 @@ test('servidor local atende WebGL e mantém controles com validação',async()=>
     await fs.rm(tokenPath,{force:true}).catch(()=>{});
   }
 });
+test('a interface anima a boca no modo falando e mostra a porta correta',async()=>{
+  const app=await fs.readFile(path.join(root,'public/app.js'),'utf8');
+  const html=await fs.readFile(path.join(root,'public/index.html'),'utf8');
+  assert.ok(app.includes("state.expression==='speaking'"), 'expressão speaking habilita animação');
+  assert.ok(app.includes("window.location.port || '80'"), 'porta é derivada da URL');
+  assert.ok(html.includes('id="portLabel"'), 'rodapé exibe porta dinâmica');
+});
