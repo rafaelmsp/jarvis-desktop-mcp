@@ -1,0 +1,3 @@
+/* Visualizacao LAN: sem comandos remotos. */
+.controls{pointer-events:none;opacity:.45;user-select:none}
+.connection:after{content:' · REDE LOCAL / SOMENTE VISUALIZACAO';font-size:10px;letter-spacing:.6px;color:#7eddec}

@@ -37,6 +37,10 @@ O monitor foi instalado em um ambiente Python isolado em `%LOCALAPPDATA%\\Jarvis
 
 **Limites:** é sincronismo de intensidade, não reconhecimento de fonemas. Como o loopback captura a **saída padrão inteira**, músicas, vídeos e outros aplicativos no mesmo dispositivo também podem mover a boca. Caso a voz do ChatGPT saia por outro dispositivo, ajuste a saída padrão do Windows. A conversa oficial do ChatGPT continua independente; o programa não recebe os eventos internos da voz do ChatGPT. É necessário iniciar o monitor novamente após reiniciar o PC; a inicialização automática não foi configurada.
 
+## Acesso por outros aparelhos na rede local (visualização)
+
+No PC, mantenha o Jarvis na porta 3766 e execute `iniciar-jarvis-rede.bat`. Em outro dispositivo da mesma rede, abra **http://192.168.0.132:3767/**. A interface replica as expressões do rosto sem permitir comandos HTTP de outros aparelhos; o MCP continua protegido no localhost. Se o Windows bloquear a conexão, siga [Acesso pela rede local](docs/acesso-rede-local.md) para liberar somente TCP 3767 em rede Privada.
+
 ## Executar no Windows 10
 
 Requer Node.js 20+ e Edge/Chrome. Não necessita `npm install`.
