@@ -2,6 +2,13 @@ const $ = id => document.getElementById(id);
 const avatar = $('avatar');
 if ($('portLabel')) $('portLabel').textContent = window.location.port || '80';
 const audioValue = $('audioValue');
+window.addEventListener('jarvis-render-progress',event=>{
+  const percent=Math.max(0,Math.min(100,Number(event.detail?.percent)||0));
+  const phase=String(event.detail?.phase||'A iniciar modelo facial');
+  if($('renderProgressBar')) $('renderProgressBar').value=percent;
+  if($('renderProgressNumber')) $('renderProgressNumber').textContent=Math.round(percent)+'%';
+  if($('renderProgressPhase')) $('renderProgressPhase').textContent=phase.toUpperCase();
+});
 const bars = Array.from({length:25},()=>{
   const bar = document.createElement('span');
   $('wave').append(bar);
@@ -79,7 +86,7 @@ function apply(state) {
   $('caption').textContent=state.caption;
   $('activity').textContent=labels[state.status] || 'JARVIS ONLINE';
   $('renderStatus').textContent=state.status.toUpperCase();
-  $('modeLabel').textContent=state.mode==='core'?'CORE · V1':'SYNTH-FACE · V4.3';
+  $('modeLabel').textContent=state.mode==='core'?'CORE · V1':'SYNTH-FACE · V4.4';
   $('updated').textContent=new Date(state.lastEventAt).toLocaleTimeString('pt-BR');
   document.body.classList.toggle('alert',state.expression==='alert'||state.status==='error');
   document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===state.mode));

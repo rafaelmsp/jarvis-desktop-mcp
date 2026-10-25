@@ -1,5 +1,5 @@
 /**
- * V4.1 — finishing pass for the canonical human wireframe.
+ * V4.4 — anatomical finishing pass for the canonical human wireframe.
  * Adds expressive eyes, contoured ears, cheekbones and neck/shoulder silhouette.
  * All geometry is local; no assets, external calls or audio capture.
  */
@@ -7,9 +7,6 @@ export function createFacialFinishing(THREE, root, faceVertices) {
   const objects = [];
   const materials = [];
   const geometries = [];
-  const lights = [];
-  const v = i => faceVertices.slice(i*3,i*3+3);
-  const M = THREE.MathUtils;
   const addGeometry = g => {geometries.push(g);return g;};
   const addMaterial = m => {materials.push(m);return m;};
   const rgba = (color, opacity=.65, depthTest=true) =>
@@ -44,7 +41,15 @@ export function createFacialFinishing(THREE, root, faceVertices) {
     dynamicLine([234,93,132,58,172,136,150,149,176,148,152,377,400,378,379,365,397,288,361,323,454],0x6feeff,.48),
     // Side profile from temples to cheekbones.
     dynamicLine([127,234,93,132,58],0x2ebae0,.28),
-    dynamicLine([356,454,323,361,288],0x2ebae0,.28)
+    dynamicLine([356,454,323,361,288],0x2ebae0,.28),
+    // Outer lip ridges and inner seam follow the deformed mouth landmarks.
+    dynamicLine([61,40,39,37,0,267,269,270,291],0xb0f7ff,.66),
+    dynamicLine([61,146,91,181,17,405,321,375,291],0x66d9fa,.64),
+    dynamicLine([78,95,88,178,87,14,317,402,318,324,308],0x46b6dd,.28),
+    // Temple, cheekbone and forehead depth cues (no additional solid surface).
+    dynamicLine([162,21,54,103,67,109,10,338,297,332,284,251],0x39bfe6,.20),
+    dynamicLine([123,116,117,118,119,120,121,128],0x2caaca,.30),
+    dynamicLine([352,345,346,347,348,349,350,357],0x2caaca,.30)
   ];
 
   // Procedural auricles based on proper ocular/nasal height, rather than flat circles.
@@ -105,8 +110,9 @@ export function createFacialFinishing(THREE, root, faceVertices) {
       const line=new THREE.Line(geo,rgba(color,alpha,false));
       iris.add(line);objects.push(line);return line;
     };
-    ring(.39,.33,0x7dedff,.70);
-    ring(.23,.235,0x32bfe7,.64);
+    ring(.43,.34,0x7dedff,.78);
+    ring(.26,.25,0x32bfe7,.65);
+    ring(.10,.10,0xc0faff,.48);
     const glint=addGeometry(new THREE.SphereGeometry(.08,6,6));
     const dot=new THREE.Mesh(glint,addMaterial(new THREE.MeshBasicMaterial({
       color:0xc2f9ff,transparent:true,opacity:.86,depthWrite:false
@@ -129,7 +135,8 @@ export function createFacialFinishing(THREE, root, faceVertices) {
     root.add(mesh);objects.push(mesh);
   }
 
-  function update({working, time=0, expression='neutral', speaking=false, reducedMotion=false}) {
+  function update({working, time=0, expression='neutral', speaking=false,
+    mouthOpen=0, blink=0, attention=0, thinking=0, reducedMotion=false}) {
     for(const f of [...dynamicContours,noseHighlight]){
       for(let j=0;j<f.ids.length;j++){
         const idx=f.ids[j]*3,k=j*3;
@@ -137,13 +144,19 @@ export function createFacialFinishing(THREE, root, faceVertices) {
       }
       f.geo.attributes.position.needsUpdate=true;
     }
-    const blink=reducedMotion?0:Math.max(0,1-Math.abs((time%5.8)-3.7)/.12);
+    // Iris remains within the eye socket; subtle attention/gaze changes.
+    const gaze=reducedMotion?0:Math.sin(time*.53)*.045;
     for (const [i,eye] of eyes.entries()) {
-      eye.scale.y=Math.max(.08,1-.89*blink-(expression==='happy'?.16:0));
-      eye.position.y=2.64+(expression==='surprised'?.035:0);
-      eye.rotation.y= (i===0 ? .025:-.025);
+      eye.scale.y=Math.max(.12,1-.86*blink-(expression==='happy'?.12:0));
+      eye.position.y=2.64+(expression==='surprised'?.06:0)+(attention*.028);
+      eye.position.x=(i===0?-3.22:3.22)+gaze;
+      eye.rotation.y= (i===0 ? .025:-.025) + thinking*.028;
+      eye.scale.x=1+attention*.023;
     }
-    eyeSocketGlow.opacity=expression==='listening'?.085:.045;
+    eyeSocketGlow.opacity=expression==='listening'?.10:.046;
+    // Mouth contour luminance follows actual opening and helps read speech.
+    const lipBrightness=.06+mouthOpen*.08;
+    for(const lip of dynamicContours.slice(7,10)) lip.line.material.opacity=.44+lipBrightness;
   }
   function dispose() {
     for(const o of objects)o.parent?.remove(o);

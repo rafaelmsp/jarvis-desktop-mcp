@@ -6,15 +6,18 @@
  */
 import * as THREE from 'three';
 import {createFacialFinishing} from './face-v4-finishing.js';
+import {createFacialRig} from './face-v4-rig.js';
 
 const $ = id => document.getElementById(id);
 const stage=$('face3dViewport');
 const avatar=$('avatar');
 const fallback=$('face3dFallback');
+const progress=(percent,phase)=>window.dispatchEvent(new CustomEvent('jarvis-render-progress',{detail:{percent,phase}}));
 if(stage && avatar) void start();
 
 async function start(){
- let renderer, raf=0, destroyed=false;
+ let renderer, raf=0, destroyed=false, firstFrame=true;
+ progress(8,'Preparando motor gráfico');
  const showFallback=(reason)=>{
    stage.hidden=true;
    if(fallback){fallback.hidden=false; fallback.querySelector('.reason').textContent=reason;}
@@ -27,6 +30,7 @@ async function start(){
    const data=await response.json();
    if(data.vertexCount!==468 || data.triangleCount<800 || data.vertices.length!==468)
      throw Error('Arquivo de malha inválido');
+   progress(26,'Malha anatómica carregada');
    const vertices=new Float32Array(data.vertices.flat());
    const tri=new Uint16Array(data.triangles.flat());
    const scene=new THREE.Scene();
@@ -87,6 +91,7 @@ async function start(){
    }));
    crispLines.renderOrder=2;
    root.add(glowLines,crispLines);
+   progress(52,'Estrutura holográfica preparada');
 
    const dots=new THREE.BufferGeometry();
    dots.setAttribute('position',new THREE.BufferAttribute(working,3));
@@ -177,9 +182,9 @@ async function start(){
      return {ids,pos,geo,line};
    });
    const finishing=createFacialFinishing(THREE,root,vertices);
+   const rig=createFacialRig(vertices);
+   progress(81,'Expressões e detalhes faciais preparados');
    const vertexCount=vertices.length/3;
-   const soft=(x,y,cx,cy,sx,sy)=>
-     Math.exp(-(((x-cx)/sx)**2+((y-cy)/sy)**2)*1.4);
    let w=0,h=0;
    const resize=()=>{
      const b=stage.getBoundingClientRect();
@@ -195,6 +200,7 @@ async function start(){
      if(destroyed || document.hidden){raf=0;return;}
      raf=requestAnimationFrame(frame);
      if(ms-last<31)return;
+     const delta=last ? (ms-last)/1000 : 1/30;
      last=ms;
      if(!avatar.classList.contains('face'))return;
      const t=ms/1000;
@@ -204,27 +210,9 @@ async function start(){
      // Comando MCP do celular prevalece temporariamente, sem desativar o loopback do PC.
      const audioDriven=avatar.dataset.audioSync==='true' && avatar.dataset.remoteTurnActive!=='true';
      const strength=Math.max(0,Math.min(1,Number(avatar.dataset.audioLevel)||0));
-     const mouth= audioDriven ? (speaking ? .08 + .78*Math.pow(strength,.72) : 0) :
-       speaking ? (.14+.64*(.5+.5*Math.sin(t*15))) : expr==='surprised'? .85 : 0;
-     const happy=expr==='happy'?1:0;
-     const blink=motion.matches?0:(Math.max(0,1-Math.abs((t%5.8)-3.7)/.12));
-     const narrowed=expr==='happy'?.14:expr==='thinking'?.08:0;
-     for(let i=0;i<vertexCount;i++){
-       const q=i*3;const x=vertices[q],y=vertices[q+1],z=vertices[q+2];
-       const front=Math.max(0,Math.min(1,(z-2)/2));
-       const lip=soft(x,y,0,-4.34,2.75,.98)*front;
-       const upperLip=y>-4.34?1:-1;
-       const smile=(soft(x,y,-2.42,-4.34,.96,.94)+soft(x,y,2.42,-4.34,.96,.94))*front;
-       const eyeL=soft(x,y,-3.12,2.67,1.5,.85)*front;
-       const eyeR=soft(x,y,3.12,2.67,1.5,.85)*front;
-       const eyes=eyeL+eyeR;
-       let yy=y + lip*upperLip*mouth*.38 + smile*happy*.48;
-       // Blink moves the upper lids down, lower lids up; no eye topology tearing.
-       yy += eyes*(blink+narrowed)*(y>2.65?-.46:.13);
-       if(expr==='alert') yy+=eyes*(y>2.65?.14:-.05);
-       const zz=z+(1-upperLip*.20)*lip*mouth*.05;
-       working[q]=x;working[q+1]=yy;working[q+2]=zz;
-     }
+     // Anatomical deformations are smoothed by the reusable V4.4 facial rig.
+     const pose=rig.updateInto(working,{time:t,delta,expression:expr,speaking,
+       audioDriven,audioLevel:strength,reducedMotion:motion.matches});
      shape.attributes.position.needsUpdate=true;
      dots.attributes.position.needsUpdate=true;
      for(let i=0;i<edgeIds.length;i++){
@@ -239,21 +227,25 @@ async function start(){
        }
        f.geo.attributes.position.needsUpdate=true;
      }
-     finishing.update({working,time:t,expression:expr,speaking,reducedMotion:motion.matches});
-     root.rotation.y= motion.matches ? .10 : .11 + .064*Math.sin(t*.35);
+     finishing.update({working,time:t,expression:expr,speaking,
+       mouthOpen:pose.mouth,blink:pose.blink,attention:pose.attention,
+       thinking:pose.thinking,reducedMotion:motion.matches});
+     root.rotation.y= motion.matches ? .10 : .11 + .064*Math.sin(t*.35) + pose.attention*.025;
      root.rotation.x= motion.matches ? 0 : .015*Math.sin(t*.27);
      root.position.y=motion.matches ? 0 : .08*Math.sin(t*.82);
      halo.rotation.z=motion.matches?0:t*.01;
      renderer.render(scene,camera);
      document.documentElement.dataset.faceV4='ready';
+     if(firstFrame){firstFrame=false;progress(100,'Rosto V4.4 pronto');}
    }
    const resume=()=>{if(!document.hidden&&!raf)raf=requestAnimationFrame(frame);};
    document.addEventListener('visibilitychange',resume);
    raf=requestAnimationFrame(frame);
    window.__jarvisV4=Object.freeze({
-     version:'4.3-preview',engine:'Three.js/WebGL',
+     version:'4.4-refinement',engine:'Three.js/WebGL',
      vertices:vertexCount,triangles:tri.length/3,edges:edgeIds.length/2,
-     getStatus:()=>document.documentElement.dataset.faceV4
+     getStatus:()=>document.documentElement.dataset.faceV4,
+     getPose:()=>rig.getPose()
    });
    window.addEventListener('beforeunload',()=>{
      destroyed=true;cancelAnimationFrame(raf);resizer.disconnect();
@@ -268,6 +260,7 @@ async function start(){
  }catch(error){
    console.error('JARVIS V4:',error);
    if(renderer)renderer.dispose();
+   progress(0,'Falha no motor 3D');
    showFallback(error.message || 'Falha no motor 3D');
  }
 }
