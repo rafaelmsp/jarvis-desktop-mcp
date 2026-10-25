@@ -3,7 +3,7 @@ export const EXPRESSIONS = ['neutral', 'happy', 'thinking', 'alert', 'surprised'
 export const STATUSES = ['idle', 'listening', 'processing', 'speaking', 'success', 'error'];
 
 export function initialState() {
-  return {mode: 'core', expression: 'neutral', status: 'idle', speaking: false,
+  return {mode: 'face', expression: 'neutral', status: 'idle', speaking: false,
     audioLevel: 0, caption: 'JARVIS ONLINE', lastEventAt: new Date().toISOString()};
 }
 
