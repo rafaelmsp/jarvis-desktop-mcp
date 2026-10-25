@@ -6,17 +6,17 @@
   <header class="top"><div class="brand"><span class="brandmark">◈</span> JARVIS <small>/ MCP AVATAR</small></div><div class="connection"><span id="connectionDot"></span><span id="connectionText">CONECTANDO</span></div></header>
   <section class="screen" aria-label="Avatar Jarvis">
     <div class="edge top-left"></div><div class="edge top-right"></div><div class="edge bottom-left"></div><div class="edge bottom-right"></div>
-    <div class="side-meta"><span>HOLOGRAPHIC INTELLIGENCE INTERFACE</span><span id="modeLabel">CORE · V1</span></div>
+    <div class="side-meta"><span>SYNTHETIC INTELLIGENCE // VECTOR GRAPHICS SYSTEM</span><span id="modeLabel">WIREGRID · V2</span></div>
     <div class="aura" id="aura"><div class="orbit orbit-a"></div><div class="orbit orbit-b"></div>
-      <div class="avatar core" id="avatar" data-expression="neutral" data-speaking="false">
+      <div class="avatar face" id="avatar" data-expression="neutral" data-speaking="false">
         <div class="core-r1"></div><div class="core-r2"></div><div class="core-r3"></div><div class="core-heart"><div class="core-center">J</div></div>
-        <div class="face-head"><div class="temple left"></div><div class="temple right"></div><div class="face-brow"></div><div class="eyes"><div class="eye"></div><div class="eye"></div></div><div class="face-nose"></div><div class="mouth"></div><div class="chin"></div></div>
+        <div class="face-head"><canvas id="wireframeFace" width="420" height="460" role="img" aria-label="Rosto sintético tridimensional em linhas triangulares azuis"></canvas><span class="face-data face-data-left">SYNTH-FACE // 1984<br>3D VECTOR MESH</span><span class="face-data face-data-right">LIVE GEOMETRY<br>NODE MATRIX</span></div>
       </div>
     </div>
     <div class="center-info"><div class="eyebrow" id="activity">SISTEMA EM ESPERA</div><h1 id="caption">JARVIS ONLINE</h1><div class="wave" id="wave" aria-hidden="true"></div></div>
     <div class="corners"><div>SYS // 001<br>LOCAL SYSTEM</div><div>VOICE LEVEL <strong id="audioValue">0%</strong><br>RENDER STATUS <strong id="renderStatus">IDLE</strong></div></div>
   </section>
-  <section class="controls" aria-label="Controles do painel"><div class="panel"><div class="heading"><span>APARÊNCIA</span><small>01 / VISUAL</small></div><div class="button-row"><button id="modeCore" data-mode="core" class="active">◉ Núcleo</button><button id="modeFace" data-mode="face">▣ Holograma</button></div></div>
+  <section class="controls" aria-label="Controles do painel"><div class="panel"><div class="heading"><span>APARÊNCIA</span><small>01 / VISUAL</small></div><div class="button-row"><button id="modeCore" data-mode="core">◉ Núcleo</button><button id="modeFace" data-mode="face" class="active">▤ Rosto Grid 80s</button></div></div>
     <div class="panel"><div class="heading"><span>EXPRESSÕES</span><small>02 / EMOTIONS</small></div><div class="button-row wrap"><button data-expression="neutral" class="active">Neutro</button><button data-expression="happy">Feliz</button><button data-expression="thinking">Pensando</button><button data-expression="alert">Alerta</button><button data-expression="surprised">Surpreso</button><button data-expression="listening">Ouvindo</button><button data-expression="speaking">Falando</button></div></div>
     <div class="panel"><div class="heading"><span>VOZ E MICROFONE</span><small>03 / LOCAL</small></div><button id="micButton" class="mic">♬ Ativar microfone</button><div class="voice-controls"><button id="voiceButton" class="mic" aria-pressed="false">🔊 Ativar voz local</button><label class="voice-label" for="testText">Teste de fala (até 120 caracteres)</label><input id="testText" maxlength="120" type="text" value="Olá! Sou o Jarvis. O painel holográfico está pronto para conversar com você." aria-label="Texto para o Jarvis falar"><button id="testVoice" class="mic test">▶ Testar resposta</button><span id="voiceInfo" class="voice-info">Voz desativada</span></div><div class="hint">O microfone só anima o brilho. A voz usa a síntese do Windows/navegador; o ChatGPT ainda requer conexão MCP.</div></div>
   </section>
