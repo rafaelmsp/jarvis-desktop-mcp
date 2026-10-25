@@ -23,3 +23,11 @@ Limites: *sincronismo por amplitude*, **não fonemas**; qualquer aplicativo que 
 **Convivência:** `audioSync=true` não bloqueia mais `voice_turn`. Um comando remoto ativo marca `remoteTurnActive=true`, e o renderer deixa temporariamente de exigir intensidade do Windows; ao terminar, retorna ao controle do PC sem desligar o monitor. Na interface aparece **PC · ÁUDIO WINDOWS ATIVO | CELULAR · MCP DISPONÍVEL** ou **EM USO · CELULAR / MCP**.
 
 **Limitação atual:** o modo Voz Live do ChatGPT não garante uma chamada MCP automática por resposta. Mesmo com o plugin do Chrome, conversas abertas no aplicativo do celular não transmitem eventos de voz diretamente à extensão do PC. O modelo visual usa uma estimativa temporizada quando a fala vem do telefone; para a saída de áudio local, usa intensidade em tempo real, não fonemas.
+
+## Ajuste de latência para o celular (25/10/2026)
+
+O comando `scripts/jarvis-voice.ps1 -Mode turn -Seconds N` agora aciona `animate_reply`: a expressão **Falando** é publicada imediatamente, sem acrescentar a pausa artificial de 450 ms do fluxo `voice_turn`. `-Mode listen` devolve o rosto imediatamente a **Ouvindo** e encerra a animação ativa sem desativar o monitor do Windows. Quando não houver sinal confiável de fim da fala, o temporizador `Seconds` oferece o retorno automático. `-Mode legacy_turn` mantém o fluxo Pensando -> Falando quando necessário. `-Mode instant` é um alias explícito do novo turno direto.
+
+Isso reduz o atraso interno do estado visual, mas **não é sincronização por áudio ou fonemas**: os eventos de início/fim da voz Live do telefone não chegam diretamente ao PC. A latência de chamada MCP e as variações na duração efetiva da resposta permanecem. O JARVIS é um avatar silencioso, sem voz adicional.
+
+A interface móvel na porta 3767 é intencionalmente **somente leitura**: o CSS inibe `.controls` e o proxy aceita apenas `GET`. Estar no mesmo Wi-Fi não autoriza modificar estados; controles móveis completos exigem projeto de autenticação no servidor LAN. Não remover a restrição apenas no CSS.

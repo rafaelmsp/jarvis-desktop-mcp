@@ -1,8 +1,10 @@
 # JARVIS — comando MCP local para a sessão conversacional.
-# Uso: powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\jarvis-voice.ps1 -Mode turn -Seconds 12
+# Uso celular: -Mode turn -Seconds 12 (imediato, sem etapa artificial de pensamento).
+# Para interromper a boca imediatamente e manter a sessao: -Mode listen.
+# Compatibilidade: -Mode legacy_turn conserva a fase antiga de pensamento.
 # Não grava, reproduz ou lê áudio; apenas atualiza expressões visuais do avatar.
 param(
-  [ValidateSet('on','off','turn','status')]
+  [ValidateSet('on','off','turn','instant','listen','legacy_turn','status')]
   [string]$Mode='status',
   [ValidateRange(1,60)]
   [double]$Seconds=12,
@@ -21,8 +23,8 @@ try {
       throw "Token local da porta $Port nao encontrado. Inicie o painel."
     }
     $token=(Get-Content -LiteralPath $tokenPath -Raw).Trim()
-    $action=if ($Mode -eq 'turn') {'voice_turn'} else {'set_voice_session'}
-    $value=if ($Mode -eq 'turn') {[double]$Seconds} else {$Mode -eq 'on'}
+    $action=if ($Mode -eq 'legacy_turn') {'voice_turn'} elseif ($Mode -in @('turn','instant')) {'animate_reply'} else {'set_voice_session'}
+    $value=if ($Mode -in @('turn','instant','legacy_turn')) {[double]$Seconds} else {$Mode -in @('on','listen')}
     $body=@{action=$action; value=$value} | ConvertTo-Json -Compress
     $response=Invoke-RestMethod -Uri "$url/api/control" -Method Post -ContentType 'application/json' -Headers @{'X-Jarvis-Token'=$token} -Body $body -TimeoutSec 4
     $state=$response.state
@@ -36,7 +38,7 @@ try {
     expression=$state.expression
     speaking=[bool]$state.speaking
     caption=$state.caption
-    estimateSeconds=if ($Mode -eq 'turn') {$Seconds} else {$null}
+    estimateSeconds=if ($Mode -in @('turn','instant','legacy_turn')) {$Seconds} else {$null}
   } | ConvertTo-Json -Compress
 } catch {
   [pscustomobject]@{ok=$false; mode=$Mode; error=$_.Exception.Message} | ConvertTo-Json -Compress

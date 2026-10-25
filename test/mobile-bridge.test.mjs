@@ -55,6 +55,14 @@ test('resposta MCP do celular prevalece temporariamente sem desligar audioSync',
     s = await state();
     assert.equal(s.remoteTurnActive, false, 'temporizador manual terminou');
     assert.equal(s.audioSync, true, 'sincronismo PC segue disponivel');
+    // Caminho de baixa latencia do celular: sem etapa artificial de pensamento.
+    s = await send('animate_reply', 10);
+    assert.equal(s.status, 'speaking', 'boca comeca no mesmo comando');
+    assert.equal(s.remoteTurnActive, true, 'celular controla o turno visual');
+    s = await send('set_voice_session', true);
+    assert.equal(s.status, 'listening', 'retorna imediatamente ao modo escutando');
+    assert.equal(s.remoteTurnActive, false, 'encerra o turno sem esperar o temporizador');
+    assert.equal(s.audioSync, true, 'monitor Windows continua preservado');
   } finally {
     processServer.kill();
     try { fs.rmSync(tokenFile); } catch {}
