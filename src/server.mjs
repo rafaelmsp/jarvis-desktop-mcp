@@ -40,8 +40,8 @@ const consume = req => new Promise((resolve, reject) => {
   req.on('end', () => {try {resolve(JSON.parse(chunks));} catch {reject(Error('JSON inválido'));}});
   req.on('error', reject);
 });
-const files = {'/':'index.html','/index.html':'index.html','/app.js':'app.js','/style.css':'style.css'};
-const types = {'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8'};
+const files = {'/':'index.html','/index.html':'index.html','/app.js':'app.js','/style.css':'style.css','/assets/jarvis_humanoide_grid_conceito.webp':'../assets/jarvis_humanoide_grid_conceito.webp'};
+const types = {'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.webp':'image/webp'};
 
 const server = http.createServer(async (req, res) => {
   const p = new URL(req.url, 'http://localhost').pathname;
