@@ -13,6 +13,7 @@ const PORT = Number(process.env.JARVIS_PORT || 3765);
 const TOKEN_FILE = path.join(os.homedir(), `.jarvis-desktop-mcp-token${PORT === 3765 ? '' : '-' + PORT}`);
 let state = initialState();
 const clients = new Set();
+let replyAnimationTimer = null;
 
 const token = randomBytes(32).toString('hex');
 fs.writeFileSync(TOKEN_FILE, token, {mode: 0o600});
@@ -63,7 +64,21 @@ const server = http.createServer(async (req, res) => {
     }
     try {
       const command = await consume(req);
-      state = applyCommand(state, command);
+      const nextState = applyCommand(state, command);
+      // Novos comandos explícitos de fala/estado substituem uma animação temporizada anterior.
+      if (command.action === 'animate_reply' || ['set_speaking','set_status','reset'].includes(command.action)) {
+        clearTimeout(replyAnimationTimer);
+        replyAnimationTimer = null;
+      }
+      state = nextState;
+      if (command.action === 'animate_reply') {
+        replyAnimationTimer = setTimeout(() => {
+          replyAnimationTimer = null;
+          state = applyCommand(state, {action:'set_speaking', value:false});
+          publish();
+        }, command.value * 1000);
+        replyAnimationTimer.unref();
+      }
       publish();
       return reply(res, 200, {ok:true, state});
     } catch (e) { return reply(res, 400, {error:e.message}); }
@@ -78,5 +93,5 @@ const server = http.createServer(async (req, res) => {
 const heartbeat = setInterval(() => {
   for (const client of clients) {try { client.write(': ping\n\n');} catch {clients.delete(client);}}
 }, 20_000);
-server.on('close', () => clearInterval(heartbeat));
+server.on('close', () => {clearInterval(heartbeat); clearTimeout(replyAnimationTimer);});
 server.listen(PORT, HOST, () => console.log(`JARVIS online em http://${HOST}:${PORT}\nToken local: ${TOKEN_FILE}`));

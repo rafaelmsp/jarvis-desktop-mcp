@@ -9,6 +9,11 @@ test('comandos permitidos modificam somente o estado do avatar',()=>{
   assert.equal(result.expression,'happy');
   assert.throws(()=>applyCommand(result,{action:'set_mode',value:'executar-comandos'}));
   assert.throws(()=>applyCommand(result,{action:'set_caption',value:'x'.repeat(121)}));
+  const puppet = applyCommand(result,{action:'animate_reply',value:12});
+  assert.equal(puppet.speaking,true);
+  assert.equal(puppet.status,'speaking');
+  assert.equal(puppet.expression,'speaking');
+  assert.throws(()=>applyCommand(result,{action:'animate_reply',value:61}));
 });
 
 test('servidor MCP responde a initialize e tools/list',async()=>{
@@ -25,7 +30,8 @@ test('servidor MCP responde a initialize e tools/list',async()=>{
     const init=await request(1,'initialize',{protocolVersion:'2025-06-18',capabilities:{},clientInfo:{name:'test',version:'1.0'}});
     assert.equal(init.result.serverInfo.name,'jarvis-avatar');
     const response=await request(2,'tools/list');
-    assert.equal(response.result.tools.length,7);
+    assert.equal(response.result.tools.length,8);
     assert.ok(response.result.tools.some(x=>x.name==='jarvis_set_mode'));
+    assert.ok(response.result.tools.some(x=>x.name==='jarvis_animate_reply'));
   } finally {proc.kill();reader.close();}
 });

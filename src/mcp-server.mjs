@@ -16,11 +16,12 @@ const tools = [
   tool('jarvis_set_expression', 'Altera expressão visual do avatar.', {value:option(EXPRESSIONS)}),
   tool('jarvis_set_status', 'Altera status do avatar: ouvindo, processando, falando, etc.', {value:option(STATUSES)}),
   tool('jarvis_set_speaking', 'Inicia/encerra a animação de fala. Não representa necessariamente o áudio real do ChatGPT.', {value:{type:'boolean'}}),
+  tool('jarvis_animate_reply', 'Simula silenciosamente a fala no rosto durante 1 a 60 segundos, desligando a animação automaticamente. Não captura nem emite áudio; é apenas uma aproximação visual, não sincronização com o áudio real.', {value:{type:'number',minimum:1,maximum:60}}),
   tool('jarvis_set_caption', 'Define mensagem breve no painel; não envie dados confidenciais.', {value:{type:'string',maxLength:120}}),
   tool('jarvis_get_state', 'Obtém estado visual atual do Jarvis.', {}, []),
   tool('jarvis_reset', 'Restaura o avatar para estado inicial.', {}, [])
 ];
-const actions = {jarvis_set_mode:'set_mode',jarvis_set_expression:'set_expression',jarvis_set_status:'set_status',jarvis_set_speaking:'set_speaking',jarvis_set_caption:'set_caption',jarvis_reset:'reset'};
+const actions = {jarvis_set_mode:'set_mode',jarvis_set_expression:'set_expression',jarvis_set_status:'set_status',jarvis_set_speaking:'set_speaking',jarvis_animate_reply:'animate_reply',jarvis_set_caption:'set_caption',jarvis_reset:'reset'};
 
 async function runTool(name,args={}) {
   const definition = tools.find(t=>t.name===name);

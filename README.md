@@ -48,4 +48,6 @@ Os projetos LexJuridicus, Codex e Desktop Commander **não são alterados**.
 npm test
 ```
 
+**Autoria e direitos autorais:** Copyright © 2026 Rafael Passos — Engenharia de Software, IA e Segurança da Informação.
+
 Licença MIT.

@@ -80,6 +80,8 @@ test('a interface anima a boca no modo falando e mostra a porta correta',async()
   assert.ok(app.includes("state.expression==='speaking'"), 'expressão speaking habilita animação');
   assert.ok(app.includes("window.location.port || '80'"), 'porta é derivada da URL');
   assert.ok(html.includes('id="portLabel"'), 'rodapé exibe porta dinâmica');
+  assert.ok(html.includes('Copyright © 2026 Rafael Passos'), 'rodapé informa os direitos autorais');
+  assert.ok(html.includes('id="puppetTest"'), 'teste silencioso disponível na interface');
 });
 
 test('acabamento humanoide cria detalhes dos olhos e orelhas e libera recursos',async()=>{
@@ -101,4 +103,35 @@ test('olhos e boca mantêm contornos sem triangulação de dentes',async()=>{
   assert.ok(code.includes('detailZone(u,v)'));
   assert.ok(code.includes("createFacialFinishing(THREE,root,vertices)"));
   assert.ok(code.includes('finishing.dispose()'));
+});
+
+test('comando visual mudo inicia a fala e a encerra automaticamente', async()=>{
+  const port=48700+Math.floor(Math.random()*300);
+  const endpoint='http://127.0.0.1:'+port;
+  const tokenPath=path.join(os.homedir(),'.jarvis-desktop-mcp-token-'+port);
+  const cp=spawn(process.execPath,['src/server.mjs'],{cwd:root,env:{...process.env,JARVIS_PORT:String(port)},stdio:['ignore','pipe','pipe']});
+  try{
+    let ready=false;
+    for(let attempt=0;attempt<100;attempt++){
+      await new Promise(r=>setTimeout(r,30));
+      try{if((await fetch(endpoint+'/api/state')).ok){ready=true;break;}}catch{}
+    }
+    assert.ok(ready, 'servidor de teste iniciou');
+    const token=(await fs.readFile(tokenPath,'utf8')).trim();
+    const command=await fetch(endpoint+'/api/control',{method:'POST',headers:{'Content-Type':'application/json','X-Jarvis-Token':token},
+      body:JSON.stringify({action:'animate_reply',value:1})});
+    assert.equal(command.status,200);
+    const initial=(await command.json()).state;
+    assert.equal(initial.speaking,true);
+    assert.equal(initial.expression,'speaking');
+    await new Promise(r=>setTimeout(r,1150));
+    const finished=await fetch(endpoint+'/api/state').then(r=>r.json());
+    assert.equal(finished.speaking,false);
+    assert.equal(finished.expression,'neutral');
+    assert.equal(finished.status,'idle');
+  } finally {
+    cp.kill();
+    await new Promise(r=>setTimeout(r,100));
+    await fs.rm(tokenPath,{force:true}).catch(()=>{});
+  }
 });

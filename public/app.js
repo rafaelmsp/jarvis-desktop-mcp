@@ -94,6 +94,10 @@ async function toggleMic() {
   } catch(e) {button.textContent='Microfone indisponível';console.warn('Permissão:',e);}
 }
 $('micButton').addEventListener('click',toggleMic);
+$('puppetTest').addEventListener('click', () => {
+  // Simulação visual local, sem SpeechSynthesis nem microfone.
+  control('animate_reply', 12);
+});
 $('voiceButton').addEventListener('click', () => {
   if (!synth) { updateVoiceInfo('Síntese de voz indisponível neste navegador'); return; }
   voiceEnabled = !voiceEnabled;

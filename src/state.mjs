@@ -20,6 +20,12 @@ export function applyCommand(current, input) {
     if (value) next.expression = 'speaking';
     else if (next.expression === 'speaking') next.expression = 'neutral';
   }
+  else if (action === 'animate_reply' && typeof value === 'number' && Number.isFinite(value) && value >= 1 && value <= 60) {
+    // Apenas anima a face; não captura nem reproduz áudio.
+    next.speaking = true;
+    next.status = 'speaking';
+    next.expression = 'speaking';
+  }
   else if (action === 'set_caption' && typeof value === 'string' && value.length <= 120) next.caption = value;
   else if (action === 'set_audio_level' && typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 1) next.audioLevel = value;
   else if (action === 'reset') return initialState();
