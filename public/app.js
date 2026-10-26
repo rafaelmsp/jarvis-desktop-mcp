@@ -60,6 +60,7 @@ function apply(state) {
   avatar.dataset.audioSync=String(Boolean(state.audioSync && state.voiceSession));
   avatar.dataset.remoteTurnActive=String(Boolean(state.remoteTurnActive));
   avatar.dataset.mood=state.mood || 'neutral';
+  avatar.dataset.voiceSession=String(Boolean(state.voiceSession));
   avatar.dataset.audioLevel=String(state.audioLevel || 0);
   if ($('lipSyncStatus')) $('lipSyncStatus').textContent=state.remoteTurnActive?'MCP · ANIMAÇÃO VISUAL TEMPORÁRIA':state.audioSync?'PC · SINCRONISMO WINDOWS LIGADO':'PC · SINCRONISMO WINDOWS DESLIGADO';
   if ($('desktopAudioStatus')) {
@@ -94,7 +95,7 @@ function apply(state) {
   $('caption').textContent=state.caption;
   $('activity').textContent=labels[state.status] || 'JARVIS ONLINE';
   $('renderStatus').textContent=state.status.toUpperCase();
-  $('modeLabel').textContent=state.mode==='core'?'CORE · V1':'SYNTH-FACE · V4.8';
+  $('modeLabel').textContent=state.mode==='core'?'CORE · V1':'SYNTH-FACE · V4.9';
   $('updated').textContent=new Date(state.lastEventAt).toLocaleTimeString('pt-BR');
   document.body.classList.toggle('alert',state.expression==='alert'||state.mood==='alert'||state.status==='error');
   document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===state.mode));
@@ -109,7 +110,40 @@ async function control(action,value) {
   } catch(e) {console.warn('Jarvis:',e.message);}
 }
 for (const b of document.querySelectorAll('[data-mode]')) b.addEventListener('click',()=>control('set_mode',b.dataset.mode));
-for (const b of document.querySelectorAll('[data-expression]')) b.addEventListener('click',()=>control('set_expression',b.dataset.expression));
+let expressionDemoToken=0;
+const demonstrationTimers=[];
+const demoButton=$('expressionDemoButton');
+function stopEmotionDemo(){
+  expressionDemoToken++;
+  while(demonstrationTimers.length)clearTimeout(demonstrationTimers.pop());
+  demoButton.disabled=false;
+  demoButton.textContent='▶ Demonstrar 4 expressões (12 s)';
+}
+for (const b of document.querySelectorAll('[data-expression]')) b.addEventListener('click',()=>{
+  stopEmotionDemo();
+  control('set_expression',b.dataset.expression);
+});
+$('autoExpressionButton').addEventListener('click',()=>{
+  const active=avatar.dataset.autoExpressions==='false';
+  avatar.dataset.autoExpressions=String(active);
+  $('autoExpressionButton').setAttribute('aria-pressed',String(active));
+  $('autoExpressionButton').classList.toggle('active',active);
+  $('autoExpressionButton').textContent=active?'◉ Expressões automáticas: ligadas':'◯ Expressões automáticas: desligadas';
+});
+demoButton.addEventListener('click',()=>{
+  stopEmotionDemo();
+  const token=expressionDemoToken;
+  const prior=current.mood&&current.mood!=='neutral'?current.mood:current.expression;
+  demoButton.disabled=true;
+  demoButton.textContent='◈ Demonstração em execução…';
+  for(const [ms,emotion] of [[0,'thinking'],[2700,'happy'],[5400,'alert'],[8100,'surprised'],[10800,prior]]){
+    demonstrationTimers.push(setTimeout(async()=>{
+      if(token!==expressionDemoToken)return;
+      await control('set_expression',emotion);
+      if(ms===10800)stopEmotionDemo();
+    },ms));
+  }
+});
 function connection(ok) {$('connectionDot').parentElement.classList.toggle('connected',ok);$('connectionText').textContent=ok?'PAINEL LOCAL · ATIVO':'PAINEL SEM CONEXÃO';}
 const events=new EventSource('/api/events');
 events.onopen=()=>connection(true);

@@ -119,3 +119,6 @@ body.alert #wireframeFace{filter:drop-shadow(0 0 10px rgba(243,186,89,.35))}
 /* Desktop focus — diagnostico visivel do sincronizador de audio Windows. */
 #desktopAudioStatus{display:block;margin-top:8px;padding:8px 10px;border-left:2px solid #2c7898;background:rgba(17,74,98,.20);color:#9ecbdc;font-family:Consolas,'Courier New',monospace;font-size:11px;letter-spacing:.35px}
 #desktopAudioStatus[data-active="true"]{border-left-color:#59e3d1;color:#c2fff4;background:rgba(24,105,102,.19)}
+
+/* JARVIS V4.9 - demonstracao e monitor de expressao facial */
+.expression-tools{display:grid;gap:9px;margin-top:12px}.expression-tools .mic{width:100%;text-align:center}.expression-tools .mic:disabled{opacity:.58;cursor:progress}#liveExpressionStatus{display:block;border-left:2px solid #49b9d7;padding:6px 10px;background:rgba(16,92,116,.18);letter-spacing:.06em}.expression-tools .hint{margin:2px 0 0}

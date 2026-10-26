@@ -79,11 +79,11 @@ test('V4.5: renderizador, barra com porcentagem e LAN compartilham os arquivos a
     fs.readFile(path.join(root,'public/app.js'),'utf8'),
     fs.readFile(path.join(root,'src/lan-viewer.mjs'),'utf8')
   ]);
-  assert.match(face,/version:'4\.[5678]-/);
+  assert.match(face,/version:'4\.[56789]-/);
   assert.ok(face.includes('gaze:pose.gaze'));
   assert.ok(finish.includes('gazeVertical=0'));
-  assert.match(html,/SYNTH-FACE · V4\.[5678]/);
-  assert.match(app,/SYNTH-FACE · V4\.[5678]/);
+  assert.match(html,/SYNTH-FACE · V4\.[56789]/);
+  assert.match(app,/SYNTH-FACE · V4\.[56789]/);
   assert.ok(html.includes('id="renderProgressNumber"'));
   assert.ok(lan.includes("'/face-v4.bundle.js':'face-v4.bundle.js'"));
   assert.ok(lan.includes("'/assets/models/canonical-face.json'"));

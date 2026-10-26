@@ -7,6 +7,7 @@
 import * as THREE from 'three';
 import {createFacialFinishing} from './face-v4-finishing.js';
 import {createFacialRig} from './face-v4-rig.js';
+import {createExpressionDirector} from './expression-director.js';
 
 const $ = id => document.getElementById(id);
 const stage=$('face3dViewport');
@@ -206,6 +207,8 @@ async function start(){
    const resizer=new ResizeObserver(resize);
    resizer.observe(stage);resize();
    const motion=window.matchMedia('(prefers-reduced-motion: reduce)');
+   const expressions=createExpressionDirector();
+   let displayedExpression='';
    let last=0;
    function frame(ms){
      if(destroyed || document.hidden){raf=0;return;}
@@ -222,8 +225,18 @@ async function start(){
      // Comando MCP do celular prevalece temporariamente, sem desativar o loopback do PC.
      const audioDriven=avatar.dataset.audioSync==='true' && avatar.dataset.remoteTurnActive!=='true';
      const strength=Math.max(0,Math.min(1,Number(avatar.dataset.audioLevel)||0));
-     // V4.7 rig adds gaze dwell, less periodic blinks and amplitude-led facial accents.
-     const pose=rig.updateInto(working,{time:t,delta,expression:expr,mood,speaking,
+     const expressive=expressions.select({time:t,expression:expr,mood,speaking,
+       voiceSession:avatar.dataset.voiceSession==='true',audioDriven,
+       audioLevel:strength,reducedMotion:motion.matches,
+       enabled:avatar.dataset.autoExpressions!=='false'});
+     if(expressive!==displayedExpression){
+       displayedExpression=expressive;
+       avatar.dataset.liveExpression=expressive;
+       if($('liveExpressionStatus')) $('liveExpressionStatus').textContent=
+         'ROSTO EM TEMPO REAL · '+expressive.toUpperCase();
+     }
+     // V4.9: expressividade ritmica, sem supor emocao pelo conteudo do audio.
+     const pose=rig.updateInto(working,{time:t,delta,expression:expressive,mood,speaking,
        audioDriven,audioLevel:strength,reducedMotion:motion.matches});
      shape.attributes.position.needsUpdate=true;
      dots.attributes.position.needsUpdate=true;
@@ -242,7 +255,7 @@ async function start(){
        }
        f.geo.attributes.position.needsUpdate=true;
      }
-     finishing.update({working,time:t,expression:mood!=='neutral'?mood:expr,speaking,
+     finishing.update({working,time:t,expression:expressive,speaking,
        mouthOpen:pose.mouth,blink:pose.blink,attention:pose.attention,
        thinking:pose.thinking,gaze:pose.gaze,gazeVertical:pose.gazeVertical,
        squint:pose.squint,speechAccent:pose.speechAccent,
@@ -256,13 +269,13 @@ async function start(){
      halo.rotation.z=motion.matches?0:t*.01;
      renderer.render(scene,camera);
      document.documentElement.dataset.faceV4='ready';
-     if(firstFrame){firstFrame=false;progress(100,'Rosto V4.8 pronto');}
+     if(firstFrame){firstFrame=false;progress(100,'Rosto V4.9 pronto');}
    }
    const resume=()=>{if(!document.hidden&&!raf)raf=requestAnimationFrame(frame);};
    document.addEventListener('visibilitychange',resume);
    raf=requestAnimationFrame(frame);
    window.__jarvisV4=Object.freeze({
-     version:'4.8-expressive-dual',engine:'Three.js/WebGL',
+     version:'4.9-expression-director',engine:'Three.js/WebGL',
      vertices:vertexCount,triangles:tri.length/3,edges:edgeIds.length/2,
      getStatus:()=>document.documentElement.dataset.faceV4,
      getPose:()=>rig.getPose()

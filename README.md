@@ -59,6 +59,12 @@ O monitor foi instalado em um ambiente Python isolado em `%LOCALAPPDATA%\\Jarvis
 
 No PC, inicie `iniciar-jarvis-dual.bat` (porta 3766) e depois `iniciar-jarvis-rede.bat`. **O inicializador agora detecta automaticamente o IP privado atual** e mostra a URL para o celular, conectado à mesma rede. No teste de 25/10/2026, o endereço foi `http://192.168.1.65:3767/`, mas ele pode mudar. A porta 3767 continua apenas para visualização GET/SSE; o MCP permanece protegido no localhost. Veja [Acesso seguro pela rede local](docs/acesso-rede-local.md).
 
+## JARVIS V4.9 — expressões faciais por ritmo da fala (Classic + voz)
+
+A V4.9 acrescenta expressividade automática discreta quando o monitor de saída de áudio do Windows está ativo: início de fala com concentração, pausas de pensamento, sorriso eventual e breves reações a ênfases de volume. **Esses sinais são puramente visuais e baseados no ritmo do som; não identificam o significado nem a emoção das palavras.** Quando o assistente envia um `mood` explícito via MCP, ou o usuário seleciona uma expressão no painel, esse comando prevalece.
+
+No painel do PC, use **Expressões automáticas: ligadas/desligadas**, ou **Demonstrar 4 expressões (12 s)** para percorrer as quatro expressões sem alterar a voz do ChatGPT. A rede local mantém apenas visualização. O início com o Windows continua desativado e o projeto segue com inicialização manual.
+
 ## JARVIS V4.8 — PC, celular e operação manual
 
 Na V4.8, **ambos os modos continuam disponíveis**: no PC, o áudio reproduzido no Windows controla a abertura dos lábios; pelo celular, comandos MCP acionam movimentos temporizados e expressões contextuais. O comportamento remoto é aproximado e não recebe áudio do telefone.
