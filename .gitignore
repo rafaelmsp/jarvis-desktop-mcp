@@ -5,3 +5,6 @@ node_modules/
 __pycache__/
 *.pyc
 .DS_Store
+# Registros locais de firewall: nunca publicar o estado da maquina
+scripts/firewall-jarvis-rede.resultado.txt
+scripts/jarvis-firewall-state.json

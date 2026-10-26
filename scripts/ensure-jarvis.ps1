@@ -1,10 +1,11 @@
 # JARVIS: verifica/reinicia apenas os servicos deste projeto, sem elevar privilegios.
-param([switch]$Quiet)
+param([switch]$Quiet,[switch]$RequireAll)
 $ErrorActionPreference='Stop'
 $root=Split-Path -Parent $PSScriptRoot
 $logDir=Join-Path $env:LOCALAPPDATA 'JarvisAutostart'
 New-Item -ItemType Directory -Path $logDir -Force | Out-Null
 function note($message){if(-not $Quiet){Write-Output $message}}
+$warnings=@()
 try {
   $state=Invoke-RestMethod 'http://127.0.0.1:3766/api/state' -TimeoutSec 2
   if($null -eq $state.mode){throw 'Resposta invalida'}
@@ -26,8 +27,9 @@ try {
 try {
   & (Join-Path $PSScriptRoot 'start-lipsync.ps1') -Mode start | Out-Null
   note 'AUDIO: monitor de loopback verificado'
-} catch {note ('AUDIO: aviso '+$_.Exception.Message)}
+} catch {$warnings+=('AUDIO: '+$_.Exception.Message);note ('AUDIO: aviso '+$_.Exception.Message)}
 try {
   & (Join-Path $PSScriptRoot 'start-lan-viewer.ps1') -NoBrowser | Out-Null
   note 'LAN: visualizador verificado'
-} catch {note ('LAN: aviso '+$_.Exception.Message)}
+} catch {$warnings+=('LAN: '+$_.Exception.Message);note ('LAN: aviso '+$_.Exception.Message)}
+if($RequireAll -and $warnings.Count){throw ('Componentes indisponiveis: '+($warnings -join '; '))}

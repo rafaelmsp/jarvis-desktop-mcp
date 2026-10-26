@@ -82,18 +82,18 @@ test('V4.7: luz orbital suavizada e desmontagem sem vazamento',()=>{
   assert.equal(rootGroup.children.length,0);
 });
 
-test('V4.7: compilação e interface usam mesma versão e mantêm prioridade MCP',async()=>{
+test('V4.8: compilação e interface usam mesma versão e mantêm prioridade MCP',async()=>{
   const [source,html,app]=await Promise.all([
     fs.readFile(path.join(root,'src/client/face-v4.js'),'utf8'),
     fs.readFile(path.join(root,'public/index.html'),'utf8'),
     fs.readFile(path.join(root,'public/app.js'),'utf8')
   ]);
-  assert.match(source,/version:'4\.7-dialogue-expression'/);
-  assert.match(source,/progress\(100,'Rosto V4\.7 pronto'\)/);
+  assert.match(source,/version:'4\.8-expressive-dual'/);
+  assert.match(source,/progress\(100,'Rosto V4\.8 pronto'\)/);
   assert.ok(source.includes('speechAccent:pose.speechAccent'));
   assert.ok(source.includes("avatar.dataset.remoteTurnActive!=='true'"));
-  assert.ok(html.includes('SYNTH-FACE · V4.7'));
-  assert.ok(app.includes('SYNTH-FACE · V4.7'));
+  assert.ok(html.includes('SYNTH-FACE · V4.8'));
+  assert.ok(app.includes('SYNTH-FACE · V4.8'));
   assert.ok(html.includes('id="renderProgressNumber"'));
   assert.equal(Buffer.from(html).includes(Buffer.from([0])),false);
 });

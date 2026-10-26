@@ -59,9 +59,15 @@ O monitor foi instalado em um ambiente Python isolado em `%LOCALAPPDATA%\\Jarvis
 
 No PC, inicie `iniciar-jarvis-dual.bat` (porta 3766) e depois `iniciar-jarvis-rede.bat`. **O inicializador agora detecta automaticamente o IP privado atual** e mostra a URL para o celular, conectado à mesma rede. No teste de 25/10/2026, o endereço foi `http://192.168.1.65:3767/`, mas ele pode mudar. A porta 3767 continua apenas para visualização GET/SSE; o MCP permanece protegido no localhost. Veja [Acesso seguro pela rede local](docs/acesso-rede-local.md).
 
-## Foco atual: JARVIS no PC (Chrome / Windows)
+## JARVIS V4.8 — PC, celular e operação manual
 
-A próxima fase prioriza o avatar local, sem desenvolver a integração com celular neste momento. No Chrome, em `http://127.0.0.1:3766/`, o painel mostra agora o estado do sincronismo do Windows: **monitor ligado aguardando som**, **áudio detectado** (nível percentual) ou **monitor desligado**. Use **`iniciar-jarvis-pc.bat`** para iniciar ou reutilizar o servidor, ativar o monitor WASAPI e abrir o Chrome, sem mexer na rede local nem precisar do celular.
+Na V4.8, **ambos os modos continuam disponíveis**: no PC, o áudio reproduzido no Windows controla a abertura dos lábios; pelo celular, comandos MCP acionam movimentos temporizados e expressões contextuais. O comportamento remoto é aproximado e não recebe áudio do telefone.
+
+Para iniciar os três componentes manualmente (painel 3766, sincronizador e visualizador LAN 3767), execute **`iniciar-jarvis-manual.bat`**. Ele também ativa a sessão visual e abre o Chrome. Para verificar o estado sem alterar nada, execute `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\diagnostico-jarvis.ps1`.
+
+**Não existe instalação para iniciar com o Windows.** Essa opção fica reservada para o caso de o usuário solicitar futuramente. O visualizador LAN continua somente leitura; as expressões contextualizadas aceitam os humores `neutral`, `happy`, `alert`, `surprised` e `thinking`.
+
+**Firewall (opcional, exige administrador):** execute manualmente `configurar-firewall-jarvis.bat` somente depois de verificar outras aplicações de rede; o Windows solicitará confirmação UAC. Esse comando liga o Firewall do perfil Privado e adiciona exceção restrita a TCP 3767, sem abrir o MCP. Para reverter alterações do JARVIS, consulte `scripts/reverter-firewall-rede.ps1`. A execução manual do JARVIS não altera o Firewall.
 
 O [perfil de conversa JARVIS/Rafael](docs/perfil-jarvis-rafael.md) especifica linguagem objetiva e tratamento pessoal, mas a personalidade das respostas depende das instruções ativas no ChatGPT: o navegador é apenas o avatar silencioso.
 
@@ -78,7 +84,7 @@ Requer Node.js 20+ e Edge/Chrome. Não necessita `npm install`.
 ## Funcionalidades
 
 - Rosto holográfico e núcleo circular com animações locais.
-- Expressões e estado visual controlados pelo painel e por onze ferramentas MCP (incluindo controle de sessão, resposta visual e sincronismo local).
+- Expressões e estado visual controlados pelo painel e por doze ferramentas MCP (incluindo controle de sessão, resposta visual e sincronismo local).
 - Síntese de voz local em português no Chrome/Edge, ativada manualmente; a nova legenda recebida via MCP pode ser lida em voz alta.\n- Efeito de áudio com permissão do microfone (apenas volume local, sem gravação).
 - Servidor HTTP em `127.0.0.1` com atualizações SSE.
 - MCP por stdio; sem necessidade de API da OpenAI.

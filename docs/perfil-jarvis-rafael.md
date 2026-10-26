@@ -22,7 +22,7 @@ Este arquivo define o **estilo conversacional do assistente** quando o usuário 
 
 ## Prioridade atual
 
-**Apenas desktop / Windows / Chrome.** Não iniciar trabalho com celular, rede externa, túneis, LexJuridicus ou Codex nesta fase. Mantenha esses componentes existentes intactos para uso futuro.
+**Dois modos preservados:** no PC, a expressão de fala acompanha a intensidade da saída de áudio do Windows. Pelo celular, o avatar recebe comandos visuais MCP, com duração estimada e expressões escolhidas pelo assistente. O acesso LAN fica restrito ao visualizador de leitura. Não configurar inicialização automática no Windows sem solicitação futura. Não alterar LexJuridicus, Codex ou seus túneis.
 
 ## Comandos úteis
 

@@ -60,9 +60,9 @@ test('V4.6: mobile pixels, GPU recoverability and orbit geometry clean-up',async
  assert.match(renderer,/webglcontextrestored/);
  assert.match(renderer,/orbitalCurves/);
  assert.match(renderer,/curve\.geometry\.dispose/);
- assert.match(renderer,/progress\(100,'Rosto V4\.[67] pronto'\)/);
- assert.match(html,/SYNTH-FACE · V4\.[67]/);
- assert.match(app,/SYNTH-FACE · V4\.[67]/);
+ assert.match(renderer,/progress\(100,'Rosto V4\.[678] pronto'\)/);
+ assert.match(html,/SYNTH-FACE · V4\.[678]/);
+ assert.match(app,/SYNTH-FACE · V4\.[678]/);
  assert.match(renderer,/avatar\.dataset\.remoteTurnActive!=='true'/);
 });
 test('V4.6: all facial states remain finite and bounded with mouth closure',()=>{

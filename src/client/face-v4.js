@@ -256,13 +256,13 @@ async function start(){
      halo.rotation.z=motion.matches?0:t*.01;
      renderer.render(scene,camera);
      document.documentElement.dataset.faceV4='ready';
-     if(firstFrame){firstFrame=false;progress(100,'Rosto V4.7 pronto');}
+     if(firstFrame){firstFrame=false;progress(100,'Rosto V4.8 pronto');}
    }
    const resume=()=>{if(!document.hidden&&!raf)raf=requestAnimationFrame(frame);};
    document.addEventListener('visibilitychange',resume);
    raf=requestAnimationFrame(frame);
    window.__jarvisV4=Object.freeze({
-     version:'4.7-dialogue-expression',engine:'Three.js/WebGL',
+     version:'4.8-expressive-dual',engine:'Three.js/WebGL',
      vertices:vertexCount,triangles:tri.length/3,edges:edgeIds.length/2,
      getStatus:()=>document.documentElement.dataset.faceV4,
      getPose:()=>rig.getPose()

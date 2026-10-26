@@ -94,7 +94,7 @@ function apply(state) {
   $('caption').textContent=state.caption;
   $('activity').textContent=labels[state.status] || 'JARVIS ONLINE';
   $('renderStatus').textContent=state.status.toUpperCase();
-  $('modeLabel').textContent=state.mode==='core'?'CORE · V1':'SYNTH-FACE · V4.7';
+  $('modeLabel').textContent=state.mode==='core'?'CORE · V1':'SYNTH-FACE · V4.8';
   $('updated').textContent=new Date(state.lastEventAt).toLocaleTimeString('pt-BR');
   document.body.classList.toggle('alert',state.expression==='alert'||state.status==='error');
   document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===state.mode));

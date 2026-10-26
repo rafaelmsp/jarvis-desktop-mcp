@@ -12,7 +12,7 @@ test('desktop: painel exibe monitor Windows e mantém controles visuais sem voz 
   const css=await fs.readFile(path.join(root,'public/style.css'),'utf8');
   const profile=await fs.readFile(path.join(root,'docs/perfil-jarvis-rafael.md'),'utf8');
   assert.ok(html.includes('id="desktopAudioStatus"'));
-  assert.ok(html.includes('MODO DESKTOP'));
+  assert.ok(html.includes('MODOS PC + CELULAR'));
   assert.ok(client.includes("state.audioLevel>=.12") || client.includes("level>=.12"));
   assert.ok(client.includes("state.remoteTurnActive"));
   assert.ok(client.includes("voiceEnabled=false; synth?.cancel(); localSpeaking=false;"));
