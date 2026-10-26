@@ -61,7 +61,11 @@ test('servidor MCP responde a initialize e tools/list',async()=>{
     const init=await request(1,'initialize',{protocolVersion:'2025-06-18',capabilities:{},clientInfo:{name:'test',version:'1.0'}});
     assert.equal(init.result.serverInfo.name,'jarvis-avatar');
     const response=await request(2,'tools/list');
-    assert.equal(response.result.tools.length,12);
+    assert.equal(response.result.tools.length,13);
+    assert.ok(response.result.tools.some(x=>x.name==='jarvis_activate_protocol'));
+    assert.ok(init.result.capabilities.prompts);
+    assert.ok(init.result.capabilities.resources);
+    assert.match(init.result.instructions,/Rafael/);
     assert.ok(response.result.tools.some(x=>x.name==='jarvis_set_mode'));
     assert.ok(response.result.tools.some(x=>x.name==='jarvis_animate_reply'));
     assert.ok(response.result.tools.some(x=>x.name==='jarvis_voice_session'));

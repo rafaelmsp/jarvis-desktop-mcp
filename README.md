@@ -59,6 +59,12 @@ O monitor foi instalado em um ambiente Python isolado em `%LOCALAPPDATA%\\Jarvis
 
 No PC, inicie `iniciar-jarvis-dual.bat` (porta 3766) e depois `iniciar-jarvis-rede.bat`. **O inicializador agora detecta automaticamente o IP privado atual** e mostra a URL para o celular, conectado à mesma rede. No teste de 25/10/2026, o endereço foi `http://192.168.1.65:3767/`, mas ele pode mudar. A porta 3767 continua apenas para visualização GET/SSE; o MCP permanece protegido no localhost. Veja [Acesso seguro pela rede local](docs/acesso-rede-local.md).
 
+## Protocolo JARVIS carregável pelo MCP — personalidade Rafael
+
+O documento autoral **`docs/JARVIS_PERSONALIDADE_MCP.md`** define o estilo conversacional de assistente tecnológico inspirado no JARVIS cinematográfico: voz verbal serena, humor contido, precisão técnica, tratamento por Rafael, sem se passar por outro modelo. O servidor `src/mcp-server.mjs` entrega o protocolo em `initialize.instructions`, `prompts/list` + `prompts/get` (prompt `jarvis-rafael`) e `resources/list` + `resources/read` (URI `jarvis://protocol/persona`). A ferramenta **`jarvis_activate_protocol`** ativa a sessão visual no PC se necessário e devolve o Markdown de personalidade para a conversa. O MCP da V4.9 usa a porta 3766 por padrão; para o painel legado, configure `JARVIS_PORT=3765`.
+
+**Limite importante:** disponibilizar esse Markdown no MCP **não obriga todos os clientes a lê-lo na conexão** ou adotar a personalidade em cada conversa. A ativação depende de invocar o prompt/skill ou chamar `jarvis_activate_protocol`, quando as ferramentas estiverem disponíveis. O plugin privado **JARVIS — Protocolo Visual v0.4.0** contém instruções para responder nesse estilo quando for invocado. Não altera a configuração global do ChatGPT nem a inicialização do Windows.
+
 ## JARVIS V4.9 — expressões faciais por ritmo da fala (Classic + voz)
 
 A V4.9 acrescenta expressividade automática discreta quando o monitor de saída de áudio do Windows está ativo: início de fala com concentração, pausas de pensamento, sorriso eventual e breves reações a ênfases de volume. **Esses sinais são puramente visuais e baseados no ritmo do som; não identificam o significado nem a emoção das palavras.** Quando o assistente envia um `mood` explícito via MCP, ou o usuário seleciona uma expressão no painel, esse comando prevalece.
