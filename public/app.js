@@ -1,5 +1,18 @@
 const $ = id => document.getElementById(id);
 const avatar = $('avatar');
+const naturalFaceButton=$('naturalFaceButton');
+function setNaturalFace(enabled){
+  const active=Boolean(enabled);
+  avatar.dataset.realism=String(active);
+  naturalFaceButton.classList.toggle('active',active);
+  naturalFaceButton.setAttribute('aria-pressed',String(active));
+  naturalFaceButton.textContent=active?'◉ Realismo anatômico: ligado':'◯ Wireframe clássico: ligado';
+  try{window.localStorage.setItem('jarvis-natural-hologram',String(active));}catch{}
+}
+let savedNatural='true';
+try{savedNatural=window.localStorage.getItem('jarvis-natural-hologram')||'true';}catch{}
+setNaturalFace(savedNatural!=='false');
+naturalFaceButton.addEventListener('click',()=>setNaturalFace(avatar.dataset.realism==='false'));
 if ($('portLabel')) $('portLabel').textContent = window.location.port || '80';
 const audioValue = $('audioValue');
 window.addEventListener('jarvis-render-progress',event=>{
@@ -95,7 +108,7 @@ function apply(state) {
   $('caption').textContent=state.caption;
   $('activity').textContent=labels[state.status] || 'JARVIS ONLINE';
   $('renderStatus').textContent=state.status.toUpperCase();
-  $('modeLabel').textContent=state.mode==='core'?'CORE · V1':'SYNTH-FACE · V4.9';
+  $('modeLabel').textContent=state.mode==='core'?'CORE · V1':'SYNTH-FACE · V5.0';
   $('updated').textContent=new Date(state.lastEventAt).toLocaleTimeString('pt-BR');
   document.body.classList.toggle('alert',state.expression==='alert'||state.mood==='alert'||state.status==='error');
   document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===state.mode));

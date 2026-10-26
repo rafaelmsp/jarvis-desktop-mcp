@@ -27,10 +27,10 @@ test('V4.8: interface expõe versão atual e continua 3D',async()=>{
     fs.readFile(path.join(root,'src/client/face-v4-rig.js'),'utf8'),
     fs.readFile(path.join(root,'src/client/face-v4.js'),'utf8')
   ]);
-  assert.match(html,/SYNTH-FACE · V4\.9/);
-  assert.match(app,/SYNTH-FACE · V4\.9/);
-  assert.match(face,/version:'4\.9-expression-director'/);
-  assert.match(face,/Rosto V4\.9 pronto/);
+  assert.match(html,/SYNTH-FACE · V5\.0/);
+  assert.match(app,/SYNTH-FACE · V5\.0/);
+  assert.match(face,/version:'5\.0-natural-hologram'/);
+  assert.match(face,/Rosto V5\.0 pronto/);
   assert.match(rig,/syntheticSpeechAt/);
   assert.match(app,/avatar\.dataset\.mood/);
 });

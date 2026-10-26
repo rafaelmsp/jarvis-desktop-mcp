@@ -88,12 +88,12 @@ test('V4.8: compilação e interface usam mesma versão e mantêm prioridade MCP
     fs.readFile(path.join(root,'public/index.html'),'utf8'),
     fs.readFile(path.join(root,'public/app.js'),'utf8')
   ]);
-  assert.match(source,/version:'4\.9-expression-director'/);
-  assert.match(source,/progress\(100,'Rosto V4\.9 pronto'\)/);
+  assert.match(source,/version:'5\.0-natural-hologram'/);
+  assert.match(source,/progress\(100,'Rosto V5\.0 pronto'\)/);
   assert.ok(source.includes('speechAccent:pose.speechAccent'));
   assert.ok(source.includes("avatar.dataset.remoteTurnActive!=='true'"));
-  assert.ok(html.includes('SYNTH-FACE · V4.9'));
-  assert.ok(app.includes('SYNTH-FACE · V4.9'));
+  assert.ok(html.includes('SYNTH-FACE · V5.0'));
+  assert.ok(app.includes('SYNTH-FACE · V5.0'));
   assert.ok(html.includes('id="renderProgressNumber"'));
   assert.equal(Buffer.from(html).includes(Buffer.from([0])),false);
 });

@@ -103,10 +103,31 @@ export function createFacialFinishing(THREE, root, faceVertices) {
   // Iris rings are finer than the 3D mesh, but sit over the anatomical eye sockets.
   // Each eye is drawn on its own plane at the local face depth.
   const eyes=[];
+  const eyeVolumes=[];
   for(const side of [-1,1]){
     const cx=side*3.22, cy=2.64, cz=4.14;
     const iris=new THREE.Group();
     iris.position.set(cx,cy,cz+.22);
+    // Olho com volume e pupila; iris e reflexo continuam holográficos.
+    const eyeball=addGeometry(new THREE.SphereGeometry(.52,24,16));
+    const eyeballMaterial=addMaterial(new THREE.MeshStandardMaterial({
+      color:0x174d68,metalness:.16,roughness:.32,
+      emissive:0x043149,emissiveIntensity:.17,
+      transparent:true,opacity:.74,depthWrite:false
+    }));
+    const ocular=new THREE.Mesh(eyeball,eyeballMaterial);
+    ocular.scale.set(1.36,.84,.33);
+    ocular.position.z=-.075;
+    iris.add(ocular);objects.push(ocular);
+    const pupilGeometry=addGeometry(new THREE.CircleGeometry(.135,32));
+    const pupilMaterial=addMaterial(new THREE.MeshBasicMaterial({
+      color:0x01101e,transparent:true,opacity:.93,depthWrite:false
+    }));
+    const pupil=new THREE.Mesh(pupilGeometry,pupilMaterial);
+    pupil.position.z=.115;
+    pupil.renderOrder=3;
+    iris.add(pupil);objects.push(pupil);
+    eyeVolumes.push(ocular,pupil);
     const ring=(radiusX,radiusY,color,alpha)=>{
       const pts=[];
       for(let i=0;i<=40;i++){
@@ -153,7 +174,7 @@ export function createFacialFinishing(THREE, root, faceVertices) {
     root.add(mesh);objects.push(mesh);
   }
 
-  function update({working, time=0, expression='neutral', speaking=false,
+  function update({working, time=0, expression='neutral', speaking=false,natural=true,
     mouthOpen=0, blink=0, attention=0, thinking=0, gaze=0,
     gazeVertical=0, squint=0, speechAccent=0, reducedMotion=false}) {
     for(const f of [...dynamicContours,noseHighlight]){
@@ -163,6 +184,8 @@ export function createFacialFinishing(THREE, root, faceVertices) {
       }
       f.geo.attributes.position.needsUpdate=true;
     }
+    // Modo clássico preserva o olho vetorial original, sem a nova esfera/pupila.
+    for(const volume of eyeVolumes)volume.visible=natural;
     // Iris remains within the eye socket; subtle attention/gaze changes.
     for (const [i,eye] of eyes.entries()) {
       eye.scale.y=Math.max(.10,1-.87*blink-.30*squint-(expression==='happy'?.06:0));
@@ -172,7 +195,7 @@ export function createFacialFinishing(THREE, root, faceVertices) {
       eye.scale.x=1+attention*.023;
     }
     // Gentle response while listening or speaking, rather than sudden light switching.
-    eyeSocketGlow.opacity=.046+attention*.052+speechAccent*.013;
+    eyeSocketGlow.opacity=.041+attention*.040+speechAccent*.010;
     // Mouth rims remain visible while the inner seam is subdued in silence.
     // During speech the inner contour brightens, emphasizing the opening
     // without drawing solid teeth or a second, artificial mouth.

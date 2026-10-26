@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node src/server.mjs",
     "mcp": "node src/mcp-server.mjs",
-    "test": "node --test test/*.test.mjs",
+    "test": "node --test --test-concurrency=2 test/*.test.mjs",
     "build-v4": "node scripts/build-v4.mjs"
   },
   "engines": {

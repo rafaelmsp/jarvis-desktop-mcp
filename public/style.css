@@ -122,3 +122,10 @@ body.alert #wireframeFace{filter:drop-shadow(0 0 10px rgba(243,186,89,.35))}
 
 /* JARVIS V4.9 - demonstracao e monitor de expressao facial */
 .expression-tools{display:grid;gap:9px;margin-top:12px}.expression-tools .mic{width:100%;text-align:center}.expression-tools .mic:disabled{opacity:.58;cursor:progress}#liveExpressionStatus{display:block;border-left:2px solid #49b9d7;padding:6px 10px;background:rgba(16,92,116,.18);letter-spacing:.06em}.expression-tools .hint{margin:2px 0 0}
+
+/* V5.0 — volume organico mantendo a assinatura holografica */
+.natural-face-toggle{width:100%;margin-top:14px;letter-spacing:.24px}
+.avatar.face[data-realism="true"] #face3dViewport{filter:drop-shadow(0 0 3px rgba(29,174,213,.29))}
+.avatar.face[data-realism="true"] .face-head::before{opacity:.28}
+.avatar.face[data-realism="true"] .face-data{opacity:.65}
+@media(max-width:450px){.natural-face-toggle{font-size:11px}}

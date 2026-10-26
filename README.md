@@ -59,6 +59,10 @@ O monitor foi instalado em um ambiente Python isolado em `%LOCALAPPDATA%\\Jarvis
 
 No PC, inicie `iniciar-jarvis-dual.bat` (porta 3766) e depois `iniciar-jarvis-rede.bat`. **O inicializador agora detecta automaticamente o IP privado atual** e mostra a URL para o celular, conectado à mesma rede. No teste de 25/10/2026, o endereço foi `http://192.168.1.65:3767/`, mas ele pode mudar. A porta 3767 continua apenas para visualização GET/SSE; o MCP permanece protegido no localhost. Veja [Acesso seguro pela rede local](docs/acesso-rede-local.md).
 
+## V5.0 — rosto holográfico com proporções e iluminação naturais
+
+A V5.0 preserva a malha MediaPipe original (468 pontos), mas acrescenta uma **superfície facial refinada por subdivisão**, iluminação suave tridimensional, olhos com volume e movimentos de cabeça mais orgânicos. A grade azul permanece visível, com menos brilho excessivo. O botão **Realismo anatômico** permite comparar a nova versão com o **Wireframe clássico** a qualquer momento; a escolha é lembrada no navegador. Não há câmera, áudio novo, login adicional ou inicialização automática no Windows. Detalhes, limitações e testes: [Refinamento V5.0](docs/refinamento-v5.md).
+
 ## Protocolo JARVIS carregável pelo MCP — personalidade Rafael
 
 O documento autoral **`docs/JARVIS_PERSONALIDADE_MCP.md`** define o estilo conversacional de assistente tecnológico inspirado no JARVIS cinematográfico: voz verbal serena, humor contido, precisão técnica, tratamento por Rafael, sem se passar por outro modelo. O servidor `src/mcp-server.mjs` entrega o protocolo em `initialize.instructions`, `prompts/list` + `prompts/get` (prompt `jarvis-rafael`) e `resources/list` + `resources/read` (URI `jarvis://protocol/persona`). A ferramenta **`jarvis_activate_protocol`** ativa a sessão visual no PC se necessário e devolve o Markdown de personalidade para a conversa. O MCP da V4.9 usa a porta 3766 por padrão; para o painel legado, configure `JARVIS_PORT=3765`.

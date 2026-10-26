@@ -8,6 +8,8 @@ import * as THREE from 'three';
 import {createFacialFinishing} from './face-v4-finishing.js';
 import {createFacialRig} from './face-v4-rig.js';
 import {createExpressionDirector} from './expression-director.js';
+import {createFacialSurfacePlan} from './facial-surface.js';
+import {naturalHeadAt} from './natural-head-motion.js';
 
 const $ = id => document.getElementById(id);
 const stage=$('face3dViewport');
@@ -67,6 +69,31 @@ async function start(){
    }));
    darkSurface.renderOrder=0;
    root.add(darkSurface);
+
+   // V5: camada anatômica mais contínua por trás da grade holográfica.
+   const skinPlan=createFacialSurfacePlan(vertices,tri,{smoothness:.58});
+   const skinGeometry=new THREE.BufferGeometry();
+   skinGeometry.setAttribute('position',new THREE.BufferAttribute(skinPlan.positions,3).setUsage(THREE.DynamicDrawUsage));
+   skinGeometry.setIndex(new THREE.BufferAttribute(skinPlan.indices,1));
+   skinGeometry.computeVertexNormals();
+   const skinMaterial=new THREE.MeshStandardMaterial({
+     color:0x297f9c,roughness:.66,metalness:.09,
+     emissive:0x053a51,emissiveIntensity:.18,
+     side:THREE.FrontSide,transparent:true,opacity:.57,
+     depthWrite:true,polygonOffset:true,polygonOffsetFactor:1,polygonOffsetUnits:1
+   });
+   const skin=new THREE.Mesh(skinGeometry,skinMaterial);
+   skin.renderOrder=0;
+   skin.frustumCulled=false;
+   root.add(skin);
+   darkSurface.visible=false;
+   // Luz lateral principal, preenchimento suave e ambiente frio (sem imagem/textura).
+   const ambience=new THREE.HemisphereLight(0xb9f0ff,0x081826,1.35);
+   const keyLight=new THREE.DirectionalLight(0xd8f8ff,2.0);
+   keyLight.position.set(-6,10,12);
+   const fillLight=new THREE.DirectionalLight(0x379ac2,.88);
+   fillLight.position.set(8,-1,8);
+   scene.add(ambience,keyLight,fillLight);
 
    // Suppress grid segments that visually resemble teeth or filled eyelids.
    // Anatomical eyelid and lip outlines remain visible in the contour layers.
@@ -218,6 +245,12 @@ async function start(){
      last=ms;
      if(!avatar.classList.contains('face'))return;
      const t=ms/1000;
+     const natural=avatar.dataset.realism!=='false';
+     skin.visible=natural;
+     darkSurface.visible=!natural;
+     glowLines.material.opacity=natural?.30:.48;
+     crispLines.material.opacity=natural?.62:.79;
+     points.material.opacity=natural?.68:.85;
      const expr=avatar.dataset.expression||'neutral';
      const mood=avatar.dataset.mood||'neutral';
      const speaking=avatar.dataset.speaking==='true';
@@ -238,6 +271,11 @@ async function start(){
      // V4.9: expressividade ritmica, sem supor emocao pelo conteudo do audio.
      const pose=rig.updateInto(working,{time:t,delta,expression:expressive,mood,speaking,
        audioDriven,audioLevel:strength,reducedMotion:motion.matches});
+     if(natural){
+       skinPlan.update(working);
+       skinGeometry.attributes.position.needsUpdate=true;
+       skinGeometry.computeVertexNormals();
+     }
      shape.attributes.position.needsUpdate=true;
      dots.attributes.position.needsUpdate=true;
      for(let i=0;i<edgeIds.length;i++){
@@ -255,34 +293,36 @@ async function start(){
        }
        f.geo.attributes.position.needsUpdate=true;
      }
-     finishing.update({working,time:t,expression:expressive,speaking,
+     finishing.update({working,time:t,expression:expressive,speaking,natural,
        mouthOpen:pose.mouth,blink:pose.blink,attention:pose.attention,
        thinking:pose.thinking,gaze:pose.gaze,gazeVertical:pose.gazeVertical,
        squint:pose.squint,speechAccent:pose.speechAccent,
        reducedMotion:motion.matches});
-     // Small eye-led head-follow keeps the hologram natural in long dialogue.
-     root.rotation.y= motion.matches ? .10 : .11+.054*Math.sin(t*.35)+
-       pose.attention*.020 + pose.gaze*.28;
-     root.rotation.x= motion.matches ? 0 : .014*Math.sin(t*.27)+
-       pose.gazeVertical*.19+pose.speechAccent*.012;
-     root.position.y=motion.matches ? 0 : .08*Math.sin(t*.82);
+     // Cabeça responde ao olhar, à respiração e a pequenas mudanças de expressão.
+     const head=naturalHeadAt(t,pose,motion.matches);
+     root.rotation.y=head.yaw;
+     root.rotation.x=head.pitch;
+     root.rotation.z=natural?head.roll:0;
+     root.position.y=head.y;
      halo.rotation.z=motion.matches?0:t*.01;
      renderer.render(scene,camera);
      document.documentElement.dataset.faceV4='ready';
-     if(firstFrame){firstFrame=false;progress(100,'Rosto V4.9 pronto');}
+     if(firstFrame){firstFrame=false;progress(100,'Rosto V5.0 pronto');}
    }
    const resume=()=>{if(!document.hidden&&!raf)raf=requestAnimationFrame(frame);};
    document.addEventListener('visibilitychange',resume);
    raf=requestAnimationFrame(frame);
    window.__jarvisV4=Object.freeze({
-     version:'4.9-expression-director',engine:'Three.js/WebGL',
+     version:'5.0-natural-hologram',engine:'Three.js/WebGL',
      vertices:vertexCount,triangles:tri.length/3,edges:edgeIds.length/2,
+     anatomicalSurface:skinPlan.getStats(),
      getStatus:()=>document.documentElement.dataset.faceV4,
      getPose:()=>rig.getPose()
    });
    window.addEventListener('beforeunload',()=>{
      destroyed=true;cancelAnimationFrame(raf);resizer.disconnect();
-     shape.dispose();lineShape.dispose();dots.dispose();particleGeom.dispose();
+     shape.dispose();skinGeometry.dispose();skinMaterial.dispose();
+     lineShape.dispose();dots.dispose();particleGeom.dispose();
      for(const curve of orbitalCurves){curve.geometry.dispose();curve.material.dispose();}
      for(const f of featureLines){f.geo.dispose();f.line.material.dispose();}
      finishing.dispose();

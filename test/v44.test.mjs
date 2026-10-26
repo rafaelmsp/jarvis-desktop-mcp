@@ -74,8 +74,8 @@ test('V4.4: progresso real de carregamento, renderer e indicadores presentes',as
     fs.readFile(path.join(root,'public/style.css'),'utf8')
   ]);
   assert.ok(source.includes('createFacialRig(vertices)'));
-  assert.match(source,/progress\(100,'Rosto V4\.[456789] pronto'\)/);
-  assert.match(source,/version:'4\.[456789]-/);
+  assert.match(source,/progress\(100,'Rosto V(?:4\.[456789]|5\.0) pronto'\)/);
+  assert.match(source,/version:'(?:4\.[456789]|5\.0)-/);
   assert.ok(source.includes("avatar.dataset.remoteTurnActive!=='true'"),'preservar prioridade celular MCP');
   assert.ok(html.includes('id="renderProgressBar"'));
   assert.ok(html.includes('id="renderProgressNumber"'));
