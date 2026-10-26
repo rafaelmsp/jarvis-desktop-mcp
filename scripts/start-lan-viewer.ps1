@@ -1,5 +1,6 @@
 # JARVIS LAN Viewer — interface read-only with automatic private IPv4 selection.
 # Does not change firewall or expose the MCP control port.
+param([switch]$NoBrowser)
 $ErrorActionPreference='Stop'
 $root=Split-Path -Parent $PSScriptRoot
 $port=3767
@@ -22,6 +23,19 @@ try {$null=Invoke-RestMethod ('http://127.0.0.1:{0}/api/state' -f $corePort) -Ti
 catch {throw 'Inicie primeiro o JARVIS no PC pela porta 3766.'}
 $viewUrl='http://{0}:{1}/' -f $lanIp,$port
 $existing=@(Get-NetTCPConnection -State Listen -LocalPort $port -ErrorAction SilentlyContinue)
+$stale=@($existing | Where-Object {$_.LocalAddress -ne $lanIp})
+if($stale.Count){
+  # Somente o visualizador JARVIS identificado; nunca encerrar processos de terceiros.
+  foreach($conn in $stale){
+    $process=Get-CimInstance Win32_Process -Filter "ProcessId=$($conn.OwningProcess)"
+    if($process.Name -ne 'node.exe' -or $process.CommandLine -notmatch 'src[/\\]lan-viewer\.mjs'){
+      throw 'Porta 3767 em uso por processo desconhecido. Recuperacao cancelada.'
+    }
+  }
+  foreach($conn in $stale){Stop-Process -Id $conn.OwningProcess -Force}
+  Start-Sleep -Milliseconds 350
+  $existing=@(Get-NetTCPConnection -State Listen -LocalPort $port -ErrorAction SilentlyContinue)
+}
 if($existing.Count){
   if(-not ($existing | Where-Object {$_.LocalAddress -eq $lanIp})){
     throw ('Porta 3767 em uso em outro endereco. Nao encerrei nenhum processo. Use o IP privado atual: '+$lanIp)
@@ -51,4 +65,4 @@ if($existing.Count){
   Write-Output ('Visualizador LAN iniciado em '+$viewUrl+' (PID '+$p.Id+')')
 }
 Write-Output 'Acesso local: apenas visualizacao. MCP e controles continuam no localhost.'
-Start-Process $viewUrl
+if(-not $NoBrowser){Start-Process $viewUrl}

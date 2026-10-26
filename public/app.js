@@ -59,8 +59,16 @@ function apply(state) {
   current=state;
   avatar.dataset.audioSync=String(Boolean(state.audioSync && state.voiceSession));
   avatar.dataset.remoteTurnActive=String(Boolean(state.remoteTurnActive));
+  avatar.dataset.mood=state.mood || 'neutral';
   avatar.dataset.audioLevel=String(state.audioLevel || 0);
-  if ($('lipSyncStatus')) $('lipSyncStatus').textContent=state.remoteTurnActive?'EM USO · CELULAR / MCP':state.audioSync?'PC · ÁUDIO WINDOWS ATIVO  |  CELULAR · MCP DISPONÍVEL':'PC · SINCRONISMO DESATIVADO  |  CELULAR · MCP DISPONÍVEL';
+  if ($('lipSyncStatus')) $('lipSyncStatus').textContent=state.remoteTurnActive?'MCP · ANIMAÇÃO VISUAL TEMPORÁRIA':state.audioSync?'PC · SINCRONISMO WINDOWS LIGADO':'PC · SINCRONISMO WINDOWS DESLIGADO';
+  if ($('desktopAudioStatus')) {
+    const live=Boolean(state.voiceSession&&state.audioSync&&!state.remoteTurnActive);
+    const level=Math.max(0,Math.min(1,Number(state.audioLevel)||0));
+    const on=live&&level>=.12;
+    $('desktopAudioStatus').textContent=state.remoteTurnActive?'ANIMAÇÃO REMOTA TEMPORÁRIA — ÁUDIO LOCAL PRESERVADO':!state.voiceSession?'SESSÃO VISUAL DESATIVADA':!state.audioSync?'MONITOR DO WINDOWS DESATIVADO':on?('PC · ÁUDIO DETECTADO · '+Math.round(level*100)+'%'):'PC · MONITOR LIGADO · AGUARDANDO SOM';
+    $('desktopAudioStatus').dataset.active=String(on);
+  }
   if (state.voiceSession) {
     // No modo visual, desabilitar som e captura locais.
     if (voiceEnabled) {

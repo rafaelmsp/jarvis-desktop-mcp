@@ -198,6 +198,6 @@ test('dois canais coexistem: mouth renderer alterna entre loopback do PC e MCP d
   const client=await fs.readFile(path.join(root,'public/app.js'),'utf8');
   assert.ok(renderer.includes("avatar.dataset.remoteTurnActive!=='true'"), 'durante celular, movimento nao depende de nivel do PC');
   assert.ok(client.includes('avatar.dataset.remoteTurnActive='), 'cliente propaga controle MCP para renderer');
-  assert.ok(client.includes('PC · ÁUDIO WINDOWS ATIVO'), 'interface preserva o modo local');
-  assert.ok(client.includes('CELULAR · MCP DISPONÍVEL'), 'interface exibe o modo celular');
+  assert.ok(client.includes('PC · SINCRONISMO WINDOWS LIGADO'), 'interface mantém sincronismo Windows');
+  assert.ok(client.includes('MCP · ANIMAÇÃO VISUAL TEMPORÁRIA'), 'interface ainda permite controle visual remoto');
 });

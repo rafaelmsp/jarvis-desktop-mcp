@@ -17,7 +17,7 @@ const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=
   '.css':'text/css; charset=utf-8','.webp':'image/webp','.json':'application/json; charset=utf-8'};
 const safe=s=>({mode:s.mode,expression:s.expression,status:s.status,speaking:s.speaking,
   voiceSession:s.voiceSession,audioSync:s.audioSync,audioLevel:s.audioLevel,
-  remoteTurnActive:s.remoteTurnActive,caption:'JARVIS ONLINE',lastEventAt:s.lastEventAt});
+  remoteTurnActive:s.remoteTurnActive,mood:s.mood||'neutral',caption:'JARVIS ONLINE',lastEventAt:s.lastEventAt});
 function response(res,status,data){res.writeHead(status,{'Content-Type':'application/json; charset=utf-8',
   'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(JSON.stringify(data));}
 const server=http.createServer(async(req,res)=>{

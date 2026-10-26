@@ -5,6 +5,7 @@
  * Lip movement is driven by amplitude, not phoneme identification.
  */
 import {blinkAt,gazeAt} from './face-v4-dynamics.js';
+import {syntheticSpeechAt} from './speech-motion.js';
 
 export const clamp01 = n => Math.min(1, Math.max(0, Number.isFinite(n) ? n : 0));
 const gauss=(x,y,cx,cy,sx,sy)=>
@@ -53,7 +54,7 @@ export function createFacialRig(vertices) {
   };
   const pose={...state};
 
-  function updateInto(out,{time=0,delta=1/30,expression='neutral',speaking=false,
+  function updateInto(out,{time=0,delta=1/30,expression='neutral',mood='neutral',speaking=false,
     audioDriven=false,audioLevel=0,reducedMotion=false}={}) {
     if (!(out instanceof Float32Array) || out.length!==vertices.length)
       throw Error('Buffer de deformação inválido');
@@ -62,21 +63,22 @@ export function createFacialRig(vertices) {
     const intensity=clamp01(Number(audioLevel));
     const vocal=audioDriven
       ? (speaking ? .1+.85*Math.pow(intensity,.72) : 0)
-      : (speaking ? .25+.54*(.5+.5*Math.sin(time*13.8)) : 0);
-    const gazeTarget=gazeAt(time,expression,reducedMotion);
+      : syntheticSpeechAt(time,{speaking,reducedMotion});
+    const visual=(speaking && mood!=='neutral' && ['happy','alert','surprised','thinking'].includes(mood)) ? mood : expression;
+    const gazeTarget=gazeAt(time,visual,reducedMotion);
     const targets={
-      mouth:Math.max(vocal,expression==='surprised'?.66:0),
-      smile:expression==='happy'?1:0,
-      attention:expression==='listening'?1:0,
-      thinking:expression==='thinking'?1:0,
-      alert:expression==='alert'?1:0,
-      surprise:expression==='surprised'?1:0,
+      mouth:Math.max(vocal,visual==='surprised'?.66:0),
+      smile:visual==='happy'?1:0,
+      attention:visual==='listening'?1:0,
+      thinking:visual==='thinking'?1:0,
+      alert:visual==='alert'?1:0,
+      surprise:visual==='surprised'?1:0,
       blink:blinkAt(time,reducedMotion),
       gaze:gazeTarget.x,
       gazeVertical:gazeTarget.y,
       speechAccent:speaking?clamp01(vocal*.76):0,
-      squint:expression==='happy'?.23:expression==='listening'?.13:
-        expression==='thinking'?.10:0
+      squint:visual==='happy'?.23:visual==='listening'?.13:
+        visual==='thinking'?.10:0
     };
     for(const key of Object.keys(state)){
       const attack=key==='mouth'?.055:key==='blink'?.028:

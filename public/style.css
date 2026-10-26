@@ -115,3 +115,7 @@ body.alert #wireframeFace{filter:drop-shadow(0 0 10px rgba(243,186,89,.35))}
 .render-load progress::-webkit-progress-value{background:linear-gradient(90deg,#117fa5,#52efff);border-radius:5px;box-shadow:0 0 12px rgba(50,217,255,.5);transition:width .24s ease}
 .render-load progress::-moz-progress-bar{background:linear-gradient(90deg,#117fa5,#52efff);border-radius:5px}
 @media(max-width:560px){.render-load{padding:10px 11px}.render-load-header{letter-spacing:.5px}}
+
+/* Desktop focus — diagnostico visivel do sincronizador de audio Windows. */
+#desktopAudioStatus{display:block;margin-top:8px;padding:8px 10px;border-left:2px solid #2c7898;background:rgba(17,74,98,.20);color:#9ecbdc;font-family:Consolas,'Courier New',monospace;font-size:11px;letter-spacing:.35px}
+#desktopAudioStatus[data-active="true"]{border-left-color:#59e3d1;color:#c2fff4;background:rgba(24,105,102,.19)}

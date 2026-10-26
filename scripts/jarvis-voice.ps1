@@ -11,6 +11,8 @@ param(
   [double]$Seconds=12,
   [ValidateRange(0,1500)]
   [int]$EndLeadMs=250,
+  [ValidateSet('neutral','happy','alert','surprised','thinking')]
+  [string]$Mood='neutral',
   [ValidateRange(0,1000)]
   [int]$WordCount=0,
   [ValidateRange(100,240)]
@@ -32,8 +34,9 @@ try {
       throw "Token local da porta $Port nao encontrado. Inicie o painel."
     }
     $token=(Get-Content -LiteralPath $tokenPath -Raw).Trim()
-    $action=if ($Mode -eq 'legacy_turn') {'voice_turn'} elseif ($Mode -in @('turn','instant')) {'animate_reply'} else {'set_voice_session'}
-    $value=if ($Mode -in @('turn','instant')) {[Math]::Max(1.0,[Math]::Round($spokenSeconds - ($EndLeadMs / 1000.0),3))} elseif ($Mode -eq 'legacy_turn') {[double]$spokenSeconds} else {$Mode -in @('on','listen')}
+    $duration=[Math]::Max(1.0,[Math]::Round($spokenSeconds - ($EndLeadMs / 1000.0),3))
+    $action=if ($Mode -eq 'legacy_turn') {'voice_turn'} elseif ($Mode -in @('turn','instant') -and $Mood -ne 'neutral') {'express_reply'} elseif ($Mode -in @('turn','instant')) {'animate_reply'} else {'set_voice_session'}
+    $value=if ($action -eq 'express_reply') {@{seconds=$duration; mood=$Mood}} elseif ($Mode -in @('turn','instant')) {$duration} elseif ($Mode -eq 'legacy_turn') {[double]$spokenSeconds} else {$Mode -in @('on','listen')}
     $body=@{action=$action; value=$value} | ConvertTo-Json -Compress
     $response=Invoke-RestMethod -Uri "$url/api/control" -Method Post -ContentType 'application/json' -Headers @{'X-Jarvis-Token'=$token} -Body $body -TimeoutSec 4
     $state=$response.state
@@ -49,7 +52,8 @@ try {
     caption=$state.caption
     estimateSeconds=if ($Mode -in @('turn','instant','legacy_turn')) {$spokenSeconds} else {$null}
     wordCount=if ($Mode -in @('turn','instant','legacy_turn')) {$WordCount} else {$null}
-    animationSeconds=if ($Mode -in @('turn','instant','legacy_turn')) {$value} else {$null}
+    animationSeconds=if ($Mode -in @('turn','instant')) {$duration} elseif ($Mode -eq 'legacy_turn') {$spokenSeconds} else {$null}
+    mood=if ($Mode -in @('turn','instant')) {$Mood} else {$null}
     endLeadMs=if ($Mode -in @('turn','instant')) {$EndLeadMs} else {$null}
   } | ConvertTo-Json -Compress
 } catch {

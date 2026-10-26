@@ -81,14 +81,14 @@ const server = http.createServer(async (req, res) => {
         return reply(res, 200, {ok:true, state});
       }
       // Novos comandos explícitos de fala/estado substituem uma animação temporizada anterior.
-      if (['animate_reply','voice_turn','set_voice_session','set_audio_sync','set_speaking','set_status','reset'].includes(command.action)) {
+      if (['animate_reply','express_reply','voice_turn','set_voice_session','set_audio_sync','set_speaking','set_status','reset'].includes(command.action)) {
         clearTimeout(replyAnimationTimer);
         clearTimeout(thinkingTimer);
         replyAnimationTimer = null;
         thinkingTimer = null;
       }
       state = nextState;
-      if (command.action === 'voice_turn' || command.action === 'animate_reply') remoteVisualTurnUntil = Date.now() + (command.action === 'voice_turn' ? 450 : 0) + command.value * 1000;
+      if (['voice_turn','animate_reply','express_reply'].includes(command.action)) remoteVisualTurnUntil = Date.now() + (command.action === 'voice_turn' ? 450 : 0) + (command.action === 'express_reply' ? command.value.seconds : command.value) * 1000;
       else if (['set_voice_session','set_audio_sync','set_speaking','set_status','reset'].includes(command.action)) remoteVisualTurnUntil = 0;
       if (command.action === 'set_audio_level') lastAudioFrameAt = Date.now();
       if (command.action === 'set_audio_sync' && !command.value) lastAudioFrameAt = 0;
@@ -109,13 +109,13 @@ const server = http.createServer(async (req, res) => {
         }, 450);
         thinkingTimer.unref();
       }
-      if (command.action === 'animate_reply') {
+      if (['animate_reply','express_reply'].includes(command.action)) {
         replyAnimationTimer = setTimeout(() => {
           replyAnimationTimer = null;
           state = applyCommand(state, {action:'set_speaking', value:false});
           remoteVisualTurnUntil = 0;
           publish();
-        }, command.value * 1000);
+        }, (command.action === 'express_reply' ? command.value.seconds : command.value) * 1000);
         replyAnimationTimer.unref();
       }
       publish();

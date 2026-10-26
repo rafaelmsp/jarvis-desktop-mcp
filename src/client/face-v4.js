@@ -216,13 +216,14 @@ async function start(){
      if(!avatar.classList.contains('face'))return;
      const t=ms/1000;
      const expr=avatar.dataset.expression||'neutral';
+     const mood=avatar.dataset.mood||'neutral';
      const speaking=avatar.dataset.speaking==='true';
      // No modo loopback, a amplitude real dirige a abertura (sem fonemas nem gravação).
      // Comando MCP do celular prevalece temporariamente, sem desativar o loopback do PC.
      const audioDriven=avatar.dataset.audioSync==='true' && avatar.dataset.remoteTurnActive!=='true';
      const strength=Math.max(0,Math.min(1,Number(avatar.dataset.audioLevel)||0));
      // V4.7 rig adds gaze dwell, less periodic blinks and amplitude-led facial accents.
-     const pose=rig.updateInto(working,{time:t,delta,expression:expr,speaking,
+     const pose=rig.updateInto(working,{time:t,delta,expression:expr,mood,speaking,
        audioDriven,audioLevel:strength,reducedMotion:motion.matches});
      shape.attributes.position.needsUpdate=true;
      dots.attributes.position.needsUpdate=true;
@@ -241,7 +242,7 @@ async function start(){
        }
        f.geo.attributes.position.needsUpdate=true;
      }
-     finishing.update({working,time:t,expression:expr,speaking,
+     finishing.update({working,time:t,expression:speaking&&mood!=='neutral'?mood:expr,speaking,
        mouthOpen:pose.mouth,blink:pose.blink,attention:pose.attention,
        thinking:pose.thinking,gaze:pose.gaze,gazeVertical:pose.gazeVertical,
        squint:pose.squint,speechAccent:pose.speechAccent,

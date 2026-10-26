@@ -59,6 +59,12 @@ O monitor foi instalado em um ambiente Python isolado em `%LOCALAPPDATA%\\Jarvis
 
 No PC, inicie `iniciar-jarvis-dual.bat` (porta 3766) e depois `iniciar-jarvis-rede.bat`. **O inicializador agora detecta automaticamente o IP privado atual** e mostra a URL para o celular, conectado à mesma rede. No teste de 25/10/2026, o endereço foi `http://192.168.1.65:3767/`, mas ele pode mudar. A porta 3767 continua apenas para visualização GET/SSE; o MCP permanece protegido no localhost. Veja [Acesso seguro pela rede local](docs/acesso-rede-local.md).
 
+## Foco atual: JARVIS no PC (Chrome / Windows)
+
+A próxima fase prioriza o avatar local, sem desenvolver a integração com celular neste momento. No Chrome, em `http://127.0.0.1:3766/`, o painel mostra agora o estado do sincronismo do Windows: **monitor ligado aguardando som**, **áudio detectado** (nível percentual) ou **monitor desligado**. Use **`iniciar-jarvis-pc.bat`** para iniciar ou reutilizar o servidor, ativar o monitor WASAPI e abrir o Chrome, sem mexer na rede local nem precisar do celular.
+
+O [perfil de conversa JARVIS/Rafael](docs/perfil-jarvis-rafael.md) especifica linguagem objetiva e tratamento pessoal, mas a personalidade das respostas depende das instruções ativas no ChatGPT: o navegador é apenas o avatar silencioso.
+
 ## Executar no Windows 10
 
 Requer Node.js 20+ e Edge/Chrome. Não necessita `npm install`.

@@ -1,9 +1,10 @@
 export const MODES = ['core', 'face'];
 export const EXPRESSIONS = ['neutral', 'happy', 'thinking', 'alert', 'surprised', 'listening', 'speaking'];
 export const STATUSES = ['idle', 'listening', 'processing', 'speaking', 'success', 'error'];
+export const MOODS = ['neutral', 'happy', 'alert', 'surprised', 'thinking'];
 
 export function initialState() {
-  return {mode: 'face', expression: 'neutral', status: 'idle', speaking: false, voiceSession: false, audioSync: false, remoteTurnActive: false,
+  return {mode: 'face', expression: 'neutral', status: 'idle', speaking: false, voiceSession: false, audioSync: false, remoteTurnActive: false, mood: 'neutral',
     audioLevel: 0, caption: 'JARVIS ONLINE', lastEventAt: new Date().toISOString()};
 }
 
@@ -13,16 +14,17 @@ export function applyCommand(current, input) {
   const next = {...current};
   if (action === 'set_mode' && MODES.includes(value)) next.mode = value;
   else if (action === 'set_expression' && EXPRESSIONS.includes(value)) next.expression = value;
-  else if (action === 'set_status' && STATUSES.includes(value)) {next.status = value; next.remoteTurnActive = false;}
+  else if (action === 'set_status' && STATUSES.includes(value)) {next.status = value; next.remoteTurnActive = false; next.mood='neutral';}
   else if (action === 'set_speaking' && typeof value === 'boolean') {
     next.speaking = value;
-    if (!value) next.remoteTurnActive = false;
+    if (!value) {next.remoteTurnActive = false; next.mood='neutral';}
     next.status = value ? 'speaking' : next.voiceSession ? 'listening' : 'idle';
     if (value) next.expression = 'speaking';
     else if (next.expression === 'speaking') next.expression = next.voiceSession ? 'listening' : 'neutral';
   }
   else if (action === 'set_voice_session' && typeof value === 'boolean') {
     next.voiceSession = value;
+    next.mood='neutral';
     next.remoteTurnActive = false;
     next.speaking = false;
     next.status = value ? 'listening' : 'idle';
@@ -31,6 +33,7 @@ export function applyCommand(current, input) {
   else if (action === 'voice_turn' && typeof value === 'number' && Number.isFinite(value) && value >= 1 && value <= 60) {
     // Inicia uma resposta visual, sem acesso ao audio do ChatGPT.
     next.voiceSession = true;
+    next.mood = 'neutral';
     next.remoteTurnActive = true;
     next.speaking = false;
     next.status = 'processing';
@@ -38,6 +41,16 @@ export function applyCommand(current, input) {
   }
   else if (action === 'animate_reply' && typeof value === 'number' && Number.isFinite(value) && value >= 1 && value <= 60) {
     // Apenas anima a face; não captura nem reproduz áudio.
+    next.mood = 'neutral';
+    next.remoteTurnActive = true;
+    next.speaking = true;
+    next.status = 'speaking';
+    next.expression = 'speaking';
+  }
+  else if (action === 'express_reply' && value && typeof value === 'object' && !Array.isArray(value) &&
+    Number.isFinite(value.seconds) && value.seconds >= 1 && value.seconds <= 60 && MOODS.includes(value.mood)) {
+    next.voiceSession = true;
+    next.mood = value.mood;
     next.remoteTurnActive = true;
     next.speaking = true;
     next.status = 'speaking';
@@ -46,6 +59,7 @@ export function applyCommand(current, input) {
   else if (action === 'set_caption' && typeof value === 'string' && value.length <= 120) next.caption = value;
   else if (action === 'set_audio_sync' && typeof value === 'boolean') {
     next.audioSync = value;
+    next.mood = 'neutral';
     next.remoteTurnActive = false;
     next.audioLevel = 0;
     next.speaking = false;
