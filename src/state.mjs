@@ -13,7 +13,11 @@ export function applyCommand(current, input) {
   const {action, value} = input;
   const next = {...current};
   if (action === 'set_mode' && MODES.includes(value)) next.mode = value;
-  else if (action === 'set_expression' && EXPRESSIONS.includes(value)) next.expression = value;
+  else if (action === 'set_expression' && EXPRESSIONS.includes(value)) {
+    next.expression = value;
+    // A emoção escolhida deve sobreviver aos frames contínuos do monitor de áudio.
+    next.mood = MOODS.includes(value) ? value : 'neutral';
+  }
   else if (action === 'set_status' && STATUSES.includes(value)) {next.status = value; next.remoteTurnActive = false; next.mood='neutral';}
   else if (action === 'set_speaking' && typeof value === 'boolean') {
     next.speaking = value;

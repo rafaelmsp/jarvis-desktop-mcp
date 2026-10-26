@@ -64,7 +64,7 @@ export function createFacialRig(vertices) {
     const vocal=audioDriven
       ? (speaking ? .1+.85*Math.pow(intensity,.72) : 0)
       : syntheticSpeechAt(time,{speaking,reducedMotion});
-    const visual=(speaking && mood!=='neutral' && ['happy','alert','surprised','thinking'].includes(mood)) ? mood : expression;
+    const visual=(mood!=='neutral' && ['happy','alert','surprised','thinking'].includes(mood)) ? mood : expression;
     const gazeTarget=gazeAt(time,visual,reducedMotion);
     const targets={
       mouth:Math.max(vocal,visual==='surprised'?.66:0),

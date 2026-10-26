@@ -96,9 +96,9 @@ function apply(state) {
   $('renderStatus').textContent=state.status.toUpperCase();
   $('modeLabel').textContent=state.mode==='core'?'CORE · V1':'SYNTH-FACE · V4.8';
   $('updated').textContent=new Date(state.lastEventAt).toLocaleTimeString('pt-BR');
-  document.body.classList.toggle('alert',state.expression==='alert'||state.status==='error');
+  document.body.classList.toggle('alert',state.expression==='alert'||state.mood==='alert'||state.status==='error');
   document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===state.mode));
-  document.querySelectorAll('[data-expression]').forEach(b=>b.classList.toggle('active',b.dataset.expression===state.expression));
+  document.querySelectorAll('[data-expression]').forEach(b=>b.classList.toggle('active',b.dataset.expression===(state.mood && state.mood!=='neutral'?state.mood:state.expression)));
   if (changedCaption) speakLocal(state.caption);
 }
 async function control(action,value) {

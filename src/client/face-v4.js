@@ -242,7 +242,7 @@ async function start(){
        }
        f.geo.attributes.position.needsUpdate=true;
      }
-     finishing.update({working,time:t,expression:speaking&&mood!=='neutral'?mood:expr,speaking,
+     finishing.update({working,time:t,expression:mood!=='neutral'?mood:expr,speaking,
        mouthOpen:pose.mouth,blink:pose.blink,attention:pose.attention,
        thinking:pose.thinking,gaze:pose.gaze,gazeVertical:pose.gazeVertical,
        squint:pose.squint,speechAccent:pose.speechAccent,
