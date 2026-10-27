@@ -1,4 +1,5 @@
 import {createEarNeckGrid} from './ear-neck-grid.js';
+import {createHairBrowsGrid} from './hair-brows-grid.js';
 
 /**
  * V5.1 — anatomical finishing pass for the canonical human wireframe.
@@ -63,6 +64,7 @@ export function createFacialFinishing(THREE, root, faceVertices) {
 
   // Concentric cartilage and cervical grids share the face's 3D reference frame.
   const anatomy=createEarNeckGrid(THREE,root);
+  const hairBrows=createHairBrowsGrid(THREE,root,faceVertices);
 
   // Iris rings are finer than the 3D mesh, but sit over the anatomical eye sockets.
   // Each eye is drawn on its own plane at the local face depth.
@@ -139,7 +141,7 @@ export function createFacialFinishing(THREE, root, faceVertices) {
   }
 
   function update({working, time=0, expression='neutral', speaking=false,natural=true,
-    mouthOpen=0, blink=0, attention=0, thinking=0, gaze=0,
+    mouthOpen=0, blink=0, attention=0, thinking=0, surprise=0, alert=0, gaze=0,
     gazeVertical=0, squint=0, speechAccent=0, reducedMotion=false}) {
     for(const f of [...dynamicContours,noseHighlight]){
       for(let j=0;j<f.ids.length;j++){
@@ -149,6 +151,7 @@ export function createFacialFinishing(THREE, root, faceVertices) {
       f.geo.attributes.position.needsUpdate=true;
     }
     anatomy.update({natural,time,reducedMotion,mouthOpen});
+    hairBrows.update({working,natural,reducedMotion,surprise,alert,thinking});
     // Modo clássico preserva o olho vetorial original, sem a nova esfera/pupila.
     for(const volume of eyeVolumes)volume.visible=natural;
     // Iris remains within the eye socket; subtle attention/gaze changes.
@@ -169,10 +172,12 @@ export function createFacialFinishing(THREE, root, faceVertices) {
     dynamicContours[9].line.material.opacity=.12+mouthOpen*.38;
   }
   function dispose() {
+    hairBrows.dispose();
     anatomy.dispose();
     for(const o of objects)o.parent?.remove(o);
     for(const g of geometries)g.dispose();
     for(const m of materials)m.dispose();
   }
-  return {update,dispose,getAnatomyStats:anatomy.getStats};
+  return {update,dispose,getAnatomyStats:anatomy.getStats,
+    getHairBrowsStats:hairBrows.getStats};
 }

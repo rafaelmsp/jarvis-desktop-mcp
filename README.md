@@ -63,6 +63,10 @@ No PC, inicie `iniciar-jarvis-dual.bat` (porta 3766) e depois `iniciar-jarvis-re
 
 O card do rosto possui o botão **⛶ Maximizar**, no canto superior direito. O comando usa a Fullscreen API do navegador e amplia apenas o card (não o painel de controles), dimensionando o mesmo canvas 3D de forma responsiva. **Esc** ou **Restaurar** volta à visualização normal. Se a Fullscreen API não estiver disponível, usa expansão local reversível. A animação, o sincronismo labial e a sessão MCP continuam ativos. O botão funciona também no visualizador LAN, sem conceder permissão para alterar o estado remoto.
 
+## Cabelo curto e sobrancelhas — Grid 3D animado
+
+O avatar agora inclui um penteado masculino curto com leve topete, mechas penteadas para trás e laterais discretas, gerado como malha 3D holográfica azul. As sobrancelhas ganharam volume, contorno e fios geométricos que acompanham o rig de expressões faciais, preservando o sincronismo labial. **Não é uma imagem fotográfica ou uma sobreposição estática.** Consulte [os detalhes técnicos](docs/cabelo-sobrancelhas-grid.md).
+
 ## Orelhas e pescoço anatômicos — malha Grid 3D
 
 O pavilhão auricular ganhou hélice, anti-hélice, concha, trago, antítrago, lóbulo e união com o crânio, com profundidade, espelhamento bilateral e linhas interconectadas. O pescoço deixou de usar anéis cilíndricos: agora possui malha frontal anatômica, esternocleidomastóideos, trapézios, tendões, laringe, clavículas e ombros em grid holográfico azul. **Não é uma imagem ou um rosto fotográfico**, e o sistema de expressões e lip-sync permanece inalterado. [Detalhes técnicos](docs/orelhas-pescoco-grid.md).

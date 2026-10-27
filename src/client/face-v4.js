@@ -278,7 +278,8 @@ async function start(){
      }
      finishing.update({working,time:t,expression:expressive,speaking,natural,
        mouthOpen:pose.mouth,blink:pose.blink,attention:pose.attention,
-       thinking:pose.thinking,gaze:pose.gaze,gazeVertical:pose.gazeVertical,
+       thinking:pose.thinking,surprise:pose.surprise,alert:pose.alert,
+       gaze:pose.gaze,gazeVertical:pose.gazeVertical,
        squint:pose.squint,speechAccent:pose.speechAccent,
        reducedMotion:motion.matches});
      // Cabeça responde ao olhar, à respiração e a pequenas mudanças de expressão.
@@ -300,6 +301,7 @@ async function start(){
      vertices:vertexCount,triangles:tri.length/3,edges:edgeIds.length/2,
      anatomicalSurface:skinPlan.getStats(),
      earNeckGrid:finishing.getAnatomyStats(),
+     hairBrowsGrid:finishing.getHairBrowsStats(),
      getStatus:()=>document.documentElement.dataset.faceV4,
      getPose:()=>rig.getPose()
    });
