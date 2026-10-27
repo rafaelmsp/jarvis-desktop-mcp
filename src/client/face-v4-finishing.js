@@ -1,5 +1,7 @@
+import {createEarNeckGrid} from './ear-neck-grid.js';
+
 /**
- * V4.7 — anatomical finishing pass for the canonical human wireframe.
+ * V5.1 — anatomical finishing pass for the canonical human wireframe.
  * Adds expressive eyes, contoured ears, cheekbones and neck/shoulder silhouette.
  * All geometry is local; no assets, external calls or audio capture.
  */
@@ -59,46 +61,8 @@ export function createFacialFinishing(THREE, root, faceVertices) {
     dynamicLine([98,97,2,326,327],0x57ddf1,.39)
   ];
 
-  // Procedural auricles based on proper ocular/nasal height, rather than flat circles.
-  // Each ear has helix, antihelix, concha, and lower lobe.
-  for (const side of [-1,1]) {
-    const xy=(x,y,z=-.75)=>[x*side,y,z];
-    curve([
-      xy(6.83,2.48),xy(7.28,3.14,-1.12),xy(8.04,2.94,-1.35),
-      xy(8.40,2.12,-1.18),xy(8.54,.68,-1.04),xy(8.30,-.52,-.98),
-      xy(8.28,-1.86,-.75),xy(7.88,-2.95,-.55),xy(7.19,-3.10,-.30),
-      xy(6.83,-2.38,-.17)
-    ],{color:0x6cecff,opacity:.78,steps:54});
-    curve([
-      xy(7.17,2.12,-.62),xy(7.78,1.95,-.72),xy(7.98,1.23,-.53),
-      xy(7.67,.36,-.35),xy(7.95,-.23,-.46),xy(7.78,-1.54,-.47),
-      xy(7.39,-2.22,-.24)
-    ],{color:0x41c7ef,opacity:.51});
-    curve([
-      xy(7.36,.95,-.33),xy(7.23,-.01,-.17),xy(7.54,-.67,-.22),
-      xy(7.17,-1.32,-.17),xy(7.06,-1.81,-.21)
-    ],{color:0x4ee9fa,opacity:.40});
-    curve([
-      xy(6.83,-.35,.05),xy(7.02,-.68,.07),xy(7.12,-1.1,-.02)
-    ],{color:0x8ce8fa,opacity:.38,steps:14});
-  }
-
-  // Refined neck with medial tendons and low-profile collarbones.
-  for(const side of [-1,1]) {
-    curve([
-      [side*2.45,-8.14,1.08],[side*2.59,-8.87,.83],
-      [side*3.01,-10.12,.72],[side*3.66,-12.22,.22],
-      [side*6.45,-13.46,-.05],[side*8.65,-13.95,-1.45]
-    ],{color:0x45d2f3,opacity:.46,steps:38});
-    curve([
-      [side*1.28,-8.86,1.65],[side*1.62,-10.30,1.51],
-      [side*1.90,-11.75,1.13],[side*3.02,-12.65,.80]
-    ],{color:0x249ebf,opacity:.36,steps:30});
-    curve([
-      [side*.23,-12.34,1.2],[side*1.3,-12.70,.98],
-      [side*3.55,-12.80,.46],[side*5.55,-13.42,-.13]
-    ],{color:0x56def3,opacity:.33});
-  }
+  // Concentric cartilage and cervical grids share the face's 3D reference frame.
+  const anatomy=createEarNeckGrid(THREE,root);
 
   // Iris rings are finer than the 3D mesh, but sit over the anatomical eye sockets.
   // Each eye is drawn on its own plane at the local face depth.
@@ -184,6 +148,7 @@ export function createFacialFinishing(THREE, root, faceVertices) {
       }
       f.geo.attributes.position.needsUpdate=true;
     }
+    anatomy.update({natural,time,reducedMotion,mouthOpen});
     // Modo clássico preserva o olho vetorial original, sem a nova esfera/pupila.
     for(const volume of eyeVolumes)volume.visible=natural;
     // Iris remains within the eye socket; subtle attention/gaze changes.
@@ -204,9 +169,10 @@ export function createFacialFinishing(THREE, root, faceVertices) {
     dynamicContours[9].line.material.opacity=.12+mouthOpen*.38;
   }
   function dispose() {
+    anatomy.dispose();
     for(const o of objects)o.parent?.remove(o);
     for(const g of geometries)g.dispose();
     for(const m of materials)m.dispose();
   }
-  return {update,dispose};
+  return {update,dispose,getAnatomyStats:anatomy.getStats};
 }

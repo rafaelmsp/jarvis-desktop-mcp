@@ -38,7 +38,7 @@ async function start(){
    const tri=new Uint16Array(data.triangles.flat());
    const scene=new THREE.Scene();
    const camera=new THREE.PerspectiveCamera(35,1,.1,130);
-   camera.position.set(0,-.7,40);
+   camera.position.set(0,-1.00,42.5);
    camera.lookAt(0,-1.35,0);
    renderer=new THREE.WebGLRenderer({alpha:true,antialias:true,powerPreference:'low-power'});
    renderer.setClearColor(0x000000,0);
@@ -164,24 +164,7 @@ async function start(){
    };
    // Ear cartilage is provided by the V4.1 anatomical finishing module.
 
-   // Neck: sloped collars and transverse rings, not a spherical base.
-   const neckY=[-8.5,-10.4,-12.45];
-   const neckX=[2.7,2.65,3.45];
-   const neckZ=[-1.2,-1.6,-1.6];
-   const neckRZ=[2.55,2.38,2.75];
-   for(let row=0;row<neckY.length;row++){
-     const ring=[];
-     for(let n=0;n<=28;n++){
-       const theta=n*Math.PI*2/28;
-       ring.push([Math.cos(theta)*neckX[row],neckY[row],Math.sin(theta)*neckRZ[row]+neckZ[row]]);
-     }
-     arc(ring,0x1cb3d1,.32);
-   }
-   for(let i=0;i<=9;i++){
-     const a=i*Math.PI*2/10;
-     arc(neckY.map((y,j)=>[Math.cos(a)*neckX[j],y,Math.sin(a)*neckRZ[j]+neckZ[j]]),
-         0x169cc1,.29);
-   }
+   // Ears and neck are now one anatomical wiregrid in ear-neck-grid.js.
    // Subtle connected diagnostic nodes floating around the mesh.
    const nodePositions=[];
    for(let i=0;i<38;i++){
@@ -316,6 +299,7 @@ async function start(){
      version:'5.0-natural-hologram',engine:'Three.js/WebGL',
      vertices:vertexCount,triangles:tri.length/3,edges:edgeIds.length/2,
      anatomicalSurface:skinPlan.getStats(),
+     earNeckGrid:finishing.getAnatomyStats(),
      getStatus:()=>document.documentElement.dataset.faceV4,
      getPose:()=>rig.getPose()
    });
