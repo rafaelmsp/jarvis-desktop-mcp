@@ -1,5 +1,6 @@
 import {createYouthfulHairProfile} from './hair-youth-profile.js';
 import {createHairFauxDepth} from './hair-faux-depth.js';
+import {createUprightHairFade} from './upright-hair-fade.js';
 
 /**
  * JARVIS V5 — cabelo masculino curto e sobrancelhas volumétricas em grid 3D.
@@ -101,7 +102,7 @@ export function createHairBrowsGrid(THREE,root,baseVertices){
 
   // Discrete filaments follow the skull from the hairline toward the crown.
   // Variations create a brushed-back quiff, not parallel spaghetti strands.
-  const filamentCount=37;
+  const filamentCount=43;
   for(let i=0;i<filamentCount;i++){
     const u=-.96+1.92*i/(filamentCount-1);
     const jitter=.016*Math.sin(i*9.13);
@@ -148,6 +149,7 @@ export function createHairBrowsGrid(THREE,root,baseVertices){
   }
   // Falso 3D em camadas translucidas: sem texturas, sem shader e sem custos por frame.
   const fauxDepth=createHairFauxDepth(THREE,hair,hairAt);
+  const barberFade=createUprightHairFade(THREE,hair,hairAt);
   // Curved wire-volume eyebrows anchored to upper/lower MediaPipe landmarks.
   // Each expression modifies working landmarks; no separate facial animation.
   const browSets=[];
@@ -190,6 +192,7 @@ export function createHairBrowsGrid(THREE,root,baseVertices){
     hairThreads.opacity=natural?.69:.75;
     sideWire.opacity=natural?.43:.59;
     fauxDepth.update({natural});
+    barberFade.update({natural});
     browVolume.opacity=natural?.25:.08;
     browWire.opacity=natural?.69:.78;
     for(const b of browSets){
@@ -227,11 +230,12 @@ export function createHairBrowsGrid(THREE,root,baseVertices){
     hairVertices:scalp.length/3,hairTriangles:faces.length/3,
     brushedStrands:filamentCount,templeStrands:12,
     youthfulFrontTips:9,style:youthfulProfile.style,
-    ...fauxDepth.getStats(),
+    ...fauxDepth.getStats(),...barberFade.getStats(),
     brows:2,browVerticesPerSide:(divisions+1)*stride,
     animatedBrowVertices:2*(divisions+1)*stride
   });
   function dispose(){
+    barberFade.dispose();
     fauxDepth.dispose();
     group.parent?.remove(group);
     for(const g of geometries)g.dispose();

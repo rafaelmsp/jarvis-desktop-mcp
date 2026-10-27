@@ -37,9 +37,10 @@ async function start(){
    const vertices=new Float32Array(data.vertices.flat());
    const tri=new Uint16Array(data.triangles.flat());
    const scene=new THREE.Scene();
-   const camera=new THREE.PerspectiveCamera(35,1,.1,130);
-   camera.position.set(0,-1.00,42.5);
-   camera.lookAt(0,-1.35,0);
+   const camera=new THREE.PerspectiveCamera(37,1,.1,130);
+   // Cabeça ampliada no eixo vertical: enquadrar topete alto e base do pescoço.
+   camera.position.set(0,-.72,50);
+   camera.lookAt(0,-.12,0);
    renderer=new THREE.WebGLRenderer({alpha:true,antialias:true,powerPreference:'low-power'});
    renderer.setClearColor(0x000000,0);
    renderer.outputColorSpace=THREE.SRGBColorSpace;

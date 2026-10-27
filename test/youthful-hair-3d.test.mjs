@@ -14,7 +14,7 @@ const vertices=new Float32Array(canonical.vertices.flat());
 test('corte juvenil 3D: topete levantado, assimetria e laterais baixas',()=>{
   const before=vertices.slice();
   const p=createYouthfulHairProfile(vertices);
-  assert.equal(p.style,'short-asymmetric-textured-quiff');
+  assert.equal(p.style,'high-upright-spiky-fade');
   const front=p.sample(0,0),raised=p.sample(0,.32),rear=p.sample(0,.92);
   const left=p.sample(-.79,.32),right=p.sample(.79,.32);
   assert.ok(raised[1]>front[1]+1.5,'topete não ganhou volume');
@@ -60,7 +60,7 @@ test('falso 3D: 3 planos em Z, sombra, linhas iluminadas e ausência de textura'
 });
 test('falso 3D: integrado ao cabelo, às sobrancelhas e à desmontagem',()=>{
   const root3=new THREE.Group(),g=createHairBrowsGrid(THREE,root3,vertices);
-  assert.equal(g.getStats().style,'short-asymmetric-textured-quiff');
+  assert.equal(g.getStats().style,'high-upright-spiky-fade');
   assert.equal(g.getStats().youthfulFrontTips,9);
   assert.equal(g.getStats().fauxLayers,3);
   assert.ok(g.getStats().brushedStrands>=35);
