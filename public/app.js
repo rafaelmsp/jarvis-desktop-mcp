@@ -13,6 +13,45 @@ let savedNatural='true';
 try{savedNatural=window.localStorage.getItem('jarvis-natural-hologram')||'true';}catch{}
 setNaturalFace(savedNatural!=='false');
 naturalFaceButton.addEventListener('click',()=>setNaturalFace(avatar.dataset.realism==='false'));
+
+// Maximiza somente o card do rosto: mantém o mesmo canvas WebGL e a sessão MCP.
+const faceCard=$('jarvisFaceCard');
+const faceFullscreenButton=$('faceFullscreenButton');
+function syncFaceFullscreenButton(){
+  const expanded=document.fullscreenElement===faceCard||faceCard.classList.contains('screen-expanded');
+  document.body.classList.toggle('jarvis-face-expanded',expanded);
+  faceFullscreenButton.setAttribute('aria-pressed',String(expanded));
+  faceFullscreenButton.setAttribute('aria-label',expanded?'Restaurar o card do rosto do JARVIS':'Maximizar o card do rosto do JARVIS');
+  faceFullscreenButton.title=expanded?'Restaurar card do rosto (Esc para sair)':'Maximizar card do rosto (Esc para sair)';
+  faceFullscreenButton.innerHTML=expanded?'▣ <span>Restaurar</span>':'⛶ <span>Maximizar</span>';
+}
+async function toggleFaceFullscreen(){
+  if(document.fullscreenElement===faceCard){
+    try{await document.exitFullscreen();}catch(error){console.warn('JARVIS fullscreen:',error.message);}
+  }else if(faceCard.classList.contains('screen-expanded')){
+    faceCard.classList.remove('screen-expanded');
+  }else if(typeof faceCard.requestFullscreen==='function' && document.fullscreenEnabled!==false){
+    try{await faceCard.requestFullscreen({navigationUI:'hide'});}
+    catch(error){
+      // Fallback útil quando o navegador/app bloqueia a Fullscreen API.
+      console.warn('JARVIS fullscreen: usando expansão local.',error.message);
+      faceCard.classList.add('screen-expanded');
+    }
+  }else{
+    faceCard.classList.add('screen-expanded');
+  }
+  syncFaceFullscreenButton();
+}
+faceFullscreenButton.addEventListener('click',()=>{void toggleFaceFullscreen();});
+document.addEventListener('fullscreenchange',syncFaceFullscreenButton);
+document.addEventListener('keydown',event=>{
+  if(event.key==='Escape'&&faceCard.classList.contains('screen-expanded')){
+    faceCard.classList.remove('screen-expanded');
+    syncFaceFullscreenButton();
+    faceFullscreenButton.focus();
+  }
+});
+
 if ($('portLabel')) $('portLabel').textContent = window.location.port || '80';
 const audioValue = $('audioValue');
 window.addEventListener('jarvis-render-progress',event=>{
