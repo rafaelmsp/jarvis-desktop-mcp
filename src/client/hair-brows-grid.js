@@ -1,3 +1,6 @@
+import {createYouthfulHairProfile} from './hair-youth-profile.js';
+import {createHairFauxDepth} from './hair-faux-depth.js';
+
 /**
  * JARVIS V5 — cabelo masculino curto e sobrancelhas volumétricas em grid 3D.
  * Referência: cabelo com topete curto penteado para trás, sem textura/fotografia.
@@ -64,18 +67,9 @@ export function createHairBrowsGrid(THREE,root,baseVertices){
     obj.name=name;obj.renderOrder=1;obj.frustumCulled=false;container.add(obj);
     return obj;
   };
-  // Faixa frontal do couro cabeludo ancorada nos pontos reais da testa.
-  const anchors=HAIRLINE.map(i=>read(baseVertices,i));
-  function hairAt(u,v){
-    const front=pointOn(anchors,(u+1)/2);
-    const broad=Math.abs(u);
-    const x=u*6.32*(1-.075*v)+.12*Math.sin(6*u+2.4*v)*v;
-    const rise=(1.85+.40*(1-broad))*Math.sin(Math.PI*v);
-    const quiff=.23*(1-broad)*Math.sin(Math.PI*clamp(v*2.0,0,1));
-    const y=front[1]+.12+rise+quiff-.76*v*v+.085*Math.cos(5.5*u+4*v)*Math.sin(Math.PI*v);
-    const z=front[2]+.12-(6.95-.30*broad)*v+.22*Math.sin(Math.PI*v);
-    return [x,y,z];
-  }
+  // Juventude: topete assimetrico de volume leve e mechas com fluxo diagonal.
+  const youthfulProfile=createYouthfulHairProfile(baseVertices);
+  const hairAt=youthfulProfile.sample;
   // Malha cortical superior: 23 colunas x 13 faixas com triangulação fina.
   const columns=22,rows=12,scalp=[],faces=[],struts=[];
   for(let r=0;r<=rows;r++){
@@ -107,17 +101,14 @@ export function createHairBrowsGrid(THREE,root,baseVertices){
 
   // Discrete filaments follow the skull from the hairline toward the crown.
   // Variations create a brushed-back quiff, not parallel spaghetti strands.
-  const filamentCount=29;
+  const filamentCount=37;
   for(let i=0;i<filamentCount;i++){
     const u=-.96+1.92*i/(filamentCount-1);
     const jitter=.016*Math.sin(i*9.13);
     const steps=[0,.13,.29,.48,.66,.87,1];
     const pts=steps.map((t,k)=>{
-      const p=hairAt(clamp(u+jitter+.042*Math.sin(i*.47+t*4)*t,-1,1),t);
-      // Small lifted strands near the front give short textured volume.
-      p[1]+=(.10+.14*Math.sin(i*1.73)**2)*Math.sin(Math.PI*t);
-      p[2]+=.08*Math.cos(i*.91)*Math.sin(Math.PI*t);
-      return p;
+      return youthfulProfile.filament(
+        clamp(u+jitter+.042*Math.sin(i*.47+t*4)*t,-1,1),t,i);
     });
     line(pts,hair,i%4===0?hairThreads:hairWire,'hair-brushed-strand-'+i,36);
   }
@@ -130,6 +121,17 @@ export function createHairBrowsGrid(THREE,root,baseVertices){
       pts.push(p);
     }
     line(pts,hair,hairWire,'hair-short-layer-'+row,50);
+  }
+  // Pequenas pontas texturizadas na franja reforcam o topete moderno.
+  for(let i=0;i<9;i++){
+    const u=-.79+i*.194,pts=[];
+    for(let j=0;j<=5;j++){
+      const v=j/5*.30,p=hairAt(u+.018*Math.sin(i*1.7+j*.7),v);
+      p[1]+=.18*Math.sin(Math.PI*j/5);
+      p[2]+=.17*Math.sin(Math.PI*j/5);
+      pts.push(p);
+    }
+    line(pts,hair,hairThreads,'hair-youthful-front-tip-'+i,18);
   }
   // Têmporas limpas e laterais curtas acima das orelhas, sem cobri-las.
   for(const side of [-1,1]){
@@ -144,6 +146,8 @@ export function createHairBrowsGrid(THREE,root,baseVertices){
       ],hair,sideWire,'hair-'+sideName+'-short-temple-'+i,22);
     }
   }
+  // Falso 3D em camadas translucidas: sem texturas, sem shader e sem custos por frame.
+  const fauxDepth=createHairFauxDepth(THREE,hair,hairAt);
   // Curved wire-volume eyebrows anchored to upper/lower MediaPipe landmarks.
   // Each expression modifies working landmarks; no separate facial animation.
   const browSets=[];
@@ -185,6 +189,7 @@ export function createHairBrowsGrid(THREE,root,baseVertices){
     hairWire.opacity=natural?.44:.57;
     hairThreads.opacity=natural?.69:.75;
     sideWire.opacity=natural?.43:.59;
+    fauxDepth.update({natural});
     browVolume.opacity=natural?.25:.08;
     browWire.opacity=natural?.69:.78;
     for(const b of browSets){
@@ -221,10 +226,13 @@ export function createHairBrowsGrid(THREE,root,baseVertices){
     hairRows:rows+1,hairColumns:columns+1,
     hairVertices:scalp.length/3,hairTriangles:faces.length/3,
     brushedStrands:filamentCount,templeStrands:12,
+    youthfulFrontTips:9,style:youthfulProfile.style,
+    ...fauxDepth.getStats(),
     brows:2,browVerticesPerSide:(divisions+1)*stride,
     animatedBrowVertices:2*(divisions+1)*stride
   });
   function dispose(){
+    fauxDepth.dispose();
     group.parent?.remove(group);
     for(const g of geometries)g.dispose();
     for(const m of materials)m.dispose();
